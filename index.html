@@ -89,19 +89,21 @@
 <body>
 <div id="letter-bg"></div>
 
-<!-- 名前入力オーバーレイ -->
-<div id="name-select-overlay">
-    <div id="name-letter-bg"></div>
-    <div class="name-select-box">
-        <h2>👋 ニックネームを にゅうりょくしてね！</h2>
-        <p style="color:#888; font-size:0.85em; margin-bottom:12px;">きろくは この ブラウザだけに ほぞんされます</p>
-        <input type="text" id="name-select-dropdown" placeholder="例: たろう" maxlength="12" autocomplete="off">
-        <button class="btn btn-primary" onclick="confirmNameSelect()" style="margin-top:15px;">はじめる！</button>
+<div class="container" id="main-app">
+    <!-- ログインバー -->
+    <div id="login-bar">
+        <div id="login-form-area">
+            <input type="text" id="login-name-input" placeholder="なまえ" maxlength="12" autocomplete="off">
+            <input type="password" id="login-pass-input" placeholder="4けたの すうじ" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+            <button class="btn-login" onclick="loginUser()">きろくする</button>
+        </div>
+        <div id="login-status-area" style="display:none;">
+            <span id="login-status-text"></span>
+            <button class="btn-logout" onclick="logoutUser()">ログアウト</button>
+        </div>
+        <p id="login-hint">✏️ なまえと4けたの すうじを いれると きろくが つくよ（いれなくても あそべます）</p>
     </div>
-</div>
 
-<div class="container" id="main-app" style="display:none;">
-    <div id="user-badge"></div>
     <h1>🌟 えいごたんご れんしゅう 🌟</h1>
     <p class="subtitle">きゅうを えらんで ちゃれんじ しよう！</p>
     <div class="tabs">
@@ -208,37 +210,31 @@
 </div>
 
 <style>
-    #name-select-overlay {
-        position: fixed; top:0; left:0; right:0; bottom:0; z-index: 1000;
-        background: linear-gradient(135deg, #4fc3f7 0%, #7e57c2 50%, #ff8a65 100%);
-        display: flex; align-items: center; justify-content: center;
-        overflow: hidden;
+    #login-bar {
+        background: rgba(255,255,255,0.9); border-radius: 16px; padding: 14px 18px;
+        margin-bottom: 20px; text-align: center;
     }
-    #name-letter-bg {
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 0; overflow: hidden; pointer-events: none;
+    #login-form-area, #login-status-area {
+        display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center;
     }
-    .name-select-box { position: relative; z-index: 1; }
-    .name-select-box {
-        background: rgba(255,255,255,0.95); border-radius: 24px; padding: 40px 45px;
-        text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); max-width: 90%;
+    #login-name-input, #login-pass-input {
+        font-size: 1em; padding: 8px 14px; border-radius: 10px; border: 2px solid #b39ddb;
+        font-family: 'Meiryo', sans-serif; text-align: center; outline: none;
     }
-    .name-select-box h2 { color: #5a3d8a; margin-bottom: 20px; font-size: 1.5em; }
-    #name-select-dropdown {
-        font-size: 1.3em; padding: 12px 20px; border-radius: 12px; border: 3px solid #b39ddb;
-        font-family: 'Meiryo', sans-serif; color: #333; background: #fff;
-        text-align: center; outline: none; width: 220px;
+    #login-name-input { width: 120px; }
+    #login-pass-input { width: 100px; }
+    #login-name-input:focus, #login-pass-input:focus { border-color: #7c4dff; }
+    .btn-login {
+        background: #7c4dff; color: #fff; border: none; padding: 9px 18px;
+        border-radius: 10px; font-size: 0.95em; cursor: pointer; font-family: 'Meiryo', sans-serif;
     }
-    #name-select-dropdown:focus { border-color: #7c4dff; }
-    #user-badge {
-        display: flex; align-items: center; justify-content: center; gap: 10px;
-        color: #fff; font-size: 1.05em; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    .btn-login:hover { background: #6a3fd6; }
+    .btn-logout {
+        background: rgba(0,0,0,0.1); color: #555; border: none; padding: 6px 14px;
+        border-radius: 8px; font-size: 0.85em; cursor: pointer; font-family: 'Meiryo', sans-serif;
     }
-    #user-badge .switch-user-btn {
-        background: rgba(255,255,255,0.25); color: #fff; border: none;
-        padding: 5px 12px; border-radius: 8px; font-size: 0.85em; cursor: pointer; font-family: 'Meiryo', sans-serif;
-    }
-    #user-badge .switch-user-btn:hover { background: rgba(255,255,255,0.4); }
+    #login-status-text { color: #5a3d8a; font-weight: bold; font-size: 1.05em; }
+    #login-hint { color: #888; font-size: 0.8em; margin-top: 8px; }
     .history-box {
         background: #f8f4ff; border-radius: 14px; padding: 15px; margin-top: 20px;
         max-height: 220px; overflow-y: auto; text-align: left;
@@ -646,6 +642,9 @@ let practiceQuestions=[], practiceIndex=0, practiceScore=0, practiceAnswered=fal
 let practiceDirection = 'j2e';
 let practiceMode = 'input'; // 'input' or 'choice'
 let practiceUserAnswer = ''; // 選択式で選んだ回答を一時保存
+let practiceRetryQueue = []; // まちがえた もんだいを もう一度 出すためのキュー
+let practiceInRetryMode = false;
+let practiceCurrentQ = null; // 現在表示中の問題（本編/やりなおし共通で参照）
 
 function selectPracticeMode(mode, btn) {
     practiceMode = mode;
@@ -677,6 +676,7 @@ function startPractice(grade) {
     const all = buildQuestionsForDirection(words, practiceDirection);
     practiceQuestions = shuffleArray(all).slice(0, 10);
     practiceIndex = 0; practiceScore = 0; practiceAnswered = false;
+    practiceRetryQueue = []; practiceInRetryMode = false;
     document.getElementById('practice-select-area').style.display='none';
     document.getElementById('practice-quiz-area').style.display='block';
     document.getElementById('practice-result-area').style.display='none';
@@ -687,7 +687,8 @@ function startPractice(grade) {
 function showPracticeQuestion() {
     practiceAnswered = false;
     practiceUserAnswer = '';
-    const q = practiceQuestions[practiceIndex];
+    const q = practiceInRetryMode ? practiceRetryQueue[0] : practiceQuestions[practiceIndex];
+    practiceCurrentQ = q;
     const dirBadge = document.getElementById('practice-direction');
     if (q.direction === 'e2j') {
         dirBadge.textContent = '英語 → 日本語';
@@ -700,7 +701,11 @@ function showPracticeQuestion() {
     document.getElementById('practice-feedback').style.display = 'none';
     document.getElementById('practice-check-btn').style.display = 'inline-block';
     document.getElementById('practice-next-btn').style.display = 'none';
-    document.getElementById('practice-progress').textContent = `もんだい ${practiceIndex+1} / ${practiceQuestions.length}`;
+    if (practiceInRetryMode) {
+        document.getElementById('practice-progress').textContent = `やりなおし もんだい（あと ${practiceRetryQueue.length}もん）`;
+    } else {
+        document.getElementById('practice-progress').textContent = `もんだい ${practiceIndex+1} / ${practiceQuestions.length}`;
+    }
 
     if (practiceMode === 'choice') {
         document.getElementById('practice-input-area').style.display = 'none';
@@ -728,7 +733,7 @@ function practiceChoiceSelect(btn, value) {
 function practiceCheck() {
     if (practiceAnswered) return;
     practiceAnswered = true;
-    const q = practiceQuestions[practiceIndex];
+    const q = practiceCurrentQ;
     const correctDisplay = q.direction==='e2j' ? q.jp : q.en;
     let isCorrectAns, userAnswer;
 
@@ -751,27 +756,49 @@ function practiceCheck() {
 
     const fb = document.getElementById('practice-feedback');
     if (isCorrectAns) {
-        practiceScore++;
+        if (!practiceInRetryMode) practiceScore++;
         fb.innerHTML = '⭐ せいかい！ <span class="english-answer">' + correctDisplay + '</span>';
         fb.className = 'feedback correct'; fb.style.display='';
         playCorrectSE();
+        if (practiceInRetryMode) practiceRetryQueue.shift(); // やりなおし成功→キューから外す
     } else {
         fb.innerHTML = '😢 ざんねん…<br><span style="color:#999;font-size:0.7em;">あなた: ' + (userAnswer || '（くうらん）') + '</span><br><span style="font-size:1.2em;">こたえ: <span class="english-answer">' + correctDisplay + '</span></span>';
         fb.className = 'feedback incorrect'; fb.style.display='';
         playWrongSE();
+        if (practiceInRetryMode) {
+            // やりなおし中の不正解 → 後ろに回してもう一度チャレンジ
+            practiceRetryQueue.push(practiceRetryQueue.shift());
+        } else {
+            // 本編の不正解 → やりなおしキューに追加
+            practiceRetryQueue.push(q);
+        }
     }
     document.getElementById('practice-check-btn').style.display = 'none';
     document.getElementById('practice-next-btn').style.display = 'inline-block';
 }
 
 function practiceNext() {
+    if (practiceInRetryMode) {
+        if (practiceRetryQueue.length === 0) { showPracticeResult(); }
+        else { showPracticeQuestion(); }
+        return;
+    }
     practiceIndex++;
-    if (practiceIndex >= practiceQuestions.length) { showPracticeResult(); }
-    else { showPracticeQuestion(); }
+    if (practiceIndex >= practiceQuestions.length) {
+        if (practiceRetryQueue.length > 0) {
+            practiceInRetryMode = true;
+            showPracticeQuestion();
+        } else {
+            showPracticeResult();
+        }
+    } else {
+        showPracticeQuestion();
+    }
 }
 
 function showPracticeResult() {
     stopBGM();
+    practiceInRetryMode = false;
     document.getElementById('practice-quiz-area').style.display = 'none';
     document.getElementById('practice-result-area').style.display = 'block';
     const total = practiceQuestions.length;
@@ -1030,66 +1057,98 @@ function populateLetterBackground(containerId, count, opts) {
 }
 function initLetterBackground() {
     populateLetterBackground('letter-bg', 22);
-    // 名前入力画面はもっとポップに（数多め・くっきり）
-    populateLetterBackground('name-letter-bg', 32, { minOpacity: 0.5, opacityRange: 0.4, minSize: 2.2, sizeRange: 4 });
 }
 
-// ========== 名前選択・スコア履歴管理 ==========
+// ========== なまえ＋4けたパスでの きろく管理 ==========
+// アカウント一覧: { "なまえ": "パスハッシュ" } を1つのキーにまとめて保存
 let currentUser = null;
+const ACCOUNTS_KEY = 'eiwa_accounts';
 const HISTORY_KEY_PREFIX = 'eiwa_history_';
 
-function confirmNameSelect() {
-    const val = document.getElementById('name-select-dropdown').value.trim();
-    if (!val) { alert('ニックネームを にゅうりょくしてね！'); return; }
-    currentUser = val;
-    document.getElementById('name-select-overlay').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-    renderUserBadge();
+// 4桁の数字のみを許可
+function isValidPass(pass) { return /^\d{4}$/.test(pass); }
+
+function getAccounts() {
+    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}');
 }
-document.addEventListener('DOMContentLoaded', () => {
-    const nameInput = document.getElementById('name-select-dropdown');
-    if (nameInput) {
-        nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmNameSelect(); });
+function saveAccounts(accounts) {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+function loginUser() {
+    const name = document.getElementById('login-name-input').value.trim();
+    const pass = document.getElementById('login-pass-input').value.trim();
+    if (!name) { alert('なまえを にゅうりょくしてね！'); return; }
+    if (!isValidPass(pass)) { alert('パスワードは 4けたの すうじで にゅうりょくしてね！'); return; }
+
+    const accounts = getAccounts();
+    if (accounts[name] !== undefined) {
+        // 既存の名前 → パスが一致するかチェック
+        if (accounts[name] !== pass) {
+            alert('その なまえは すでに つかわれています。ちがう なまえか、もしくは とうろくした ときの パスワードを にゅうりょくしてね！');
+            return;
+        }
+    } else {
+        // 新規登録
+        accounts[name] = pass;
+        saveAccounts(accounts);
     }
+    currentUser = name;
+    renderLoginStatus();
+}
+
+function logoutUser() {
+    currentUser = null;
+    document.getElementById('login-name-input').value = '';
+    document.getElementById('login-pass-input').value = '';
+    renderLoginStatus();
+}
+
+function renderLoginStatus() {
+    if (currentUser) {
+        document.getElementById('login-form-area').style.display = 'none';
+        document.getElementById('login-status-area').style.display = 'flex';
+        document.getElementById('login-status-text').textContent = `👤 ${currentUser} さん（きろくちゅう）`;
+        document.getElementById('login-hint').style.display = 'none';
+    } else {
+        document.getElementById('login-form-area').style.display = 'flex';
+        document.getElementById('login-status-area').style.display = 'none';
+        document.getElementById('login-hint').style.display = 'block';
+    }
+    // きろくタブが表示中なら更新
+    if (document.getElementById('tab-history').classList.contains('active')) renderHistory();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const passInput = document.getElementById('login-pass-input');
+    const nameInput = document.getElementById('login-name-input');
+    if (passInput) passInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginUser(); });
+    if (nameInput) nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('login-pass-input').focus(); });
 });
 
-function renderUserBadge() {
-    document.getElementById('user-badge').innerHTML =
-        `👤 ${currentUser} さん <button class="switch-user-btn" onclick="switchUser()">なまえを かえる</button>`;
-}
-
-function switchUser() {
-    // 進行中のクイズがあれば停止
-    stopBGM();
-    currentUser = null;
-    document.getElementById('name-select-dropdown').value = '';
-    document.getElementById('main-app').style.display = 'none';
-    document.getElementById('name-select-overlay').style.display = 'flex';
-    // 各画面を選択状態に戻す
-    backToPracticeSelect();
-    backToTestSelect();
-    switchTab('practice');
-}
-
 function saveHistory(mode, detail, score, total) {
-    if (!currentUser) return;
+    if (!currentUser) return; // ログインしてなければ記録しない
     const key = HISTORY_KEY_PREFIX + currentUser;
     const list = JSON.parse(localStorage.getItem(key) || '[]');
     list.push({
         date: new Date().toLocaleString('ja-JP', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}),
         mode, detail, score, total
     });
-    // 直近50件まで保持
     while (list.length > 50) list.shift();
     localStorage.setItem(key, JSON.stringify(list));
 }
 
 function renderHistory() {
-    if (!currentUser) return;
-    document.getElementById('history-username-label').textContent = currentUser;
+    const label = document.getElementById('history-username-label');
+    const area = document.getElementById('history-list');
+    if (!currentUser) {
+        label.textContent = '';
+        area.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">なまえと パスワードを にゅうりょくすると きろくが つくよ！</p>';
+        return;
+    }
+    label.textContent = currentUser;
     const key = HISTORY_KEY_PREFIX + currentUser;
     const list = JSON.parse(localStorage.getItem(key) || '[]').slice(-20).reverse();
-    const area = document.getElementById('history-list');
     if (list.length === 0) {
         area.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">きろくが まだ ないよ！れんしゅう・テストを やってみよう</p>';
         return;
