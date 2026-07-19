@@ -217,6 +217,10 @@
         <p style="color:#666; margin-bottom:15px;"><span id="history-username-label"></span>さんの きろく（さいきん20けん）</p>
         <div class="history-box" id="history-list"></div>
     </div>
+
+    <div id="bottom-ad" style="text-align:center; margin-top:20px;">
+        <a href="https://rpx.a8.net/svt/ejp?a8mat=4B8450+3JET0A+2HOM+63OY9&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0ea62065.34400275.0ea62066.204f04c0%2Fa18081801907_4B8450_3JET0A_2HOM_63OY9%3Fpc%3Dhttp%253A%252F%252Fwww.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Fm.rakuten.co.jp%252F" rel="nofollow"><img src="https://hbb.afl.rakuten.co.jp/hsb/0ec09b9c.483b4874.0eb4bbaa.95151395/" border="0"></a><img border="0" width="1" height="1" src="https://www12.a8.net/0.gif?a8mat=4B8450+3JET0A+2HOM+63OY9" alt="">
+    </div>
 </div>
 
 <style>
@@ -681,7 +685,13 @@ function selectPracticeGrade(grade, btn) {
     startPractice(grade);
 }
 
+function setBottomAdVisible(visible) {
+    const ad = document.getElementById('bottom-ad');
+    if (ad) ad.style.display = visible ? 'block' : 'none';
+}
+
 function startPractice(grade) {
+    setBottomAdVisible(false);
     const words = GRADE_WORDS[grade];
     const all = buildQuestionsForDirection(words, practiceDirection);
     practiceQuestions = shuffleArray(all).slice(0, 10);
@@ -808,6 +818,7 @@ function practiceNext() {
 
 function showPracticeResult() {
     stopBGM();
+    setBottomAdVisible(true);
     practiceInRetryMode = false;
     document.getElementById('practice-quiz-area').style.display = 'none';
     document.getElementById('practice-result-area').style.display = 'block';
@@ -829,6 +840,7 @@ function showPracticeResult() {
 }
 
 function backToPracticeSelect() {
+    setBottomAdVisible(true);
     document.getElementById('practice-result-area').style.display = 'none';
     document.getElementById('practice-quiz-area').style.display = 'none';
     document.getElementById('practice-select-area').style.display = 'block';
@@ -876,6 +888,7 @@ function toggleTestGrade(grade, btn) {
 
 function startTest() {
     if (selectedTestGrades.size === 0) { alert('しゅつだいはんいを 1つ いじょう えらんでね！'); return; }
+    setBottomAdVisible(false);
     // 選んだ級の単語を全部集めて、方向設定に応じて問題を作る
     let all = [];
     selectedTestGrades.forEach(g => {
@@ -980,6 +993,7 @@ function testNext() {
 
 function showTestResult() {
     stopBGM();
+    setBottomAdVisible(true);
     document.getElementById('test-quiz-area').style.display = 'none';
     document.getElementById('test-result-area').style.display = 'block';
     const total = testQuestions.length;
@@ -1009,6 +1023,7 @@ function showTestResult() {
 }
 
 function backToTestSelect() {
+    setBottomAdVisible(true);
     document.getElementById('test-result-area').style.display = 'none';
     document.getElementById('test-quiz-area').style.display = 'none';
     document.getElementById('test-select-area').style.display = 'block';
