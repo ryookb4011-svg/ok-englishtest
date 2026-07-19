@@ -157,7 +157,6 @@
             <div class="direction-buttons" id="practice-direction-buttons">
                 <button class="dir-btn selected" data-dir="j2e" onclick="selectPracticeDirection('j2e', this)">日本語 → 英語</button>
                 <button class="dir-btn" data-dir="e2j" onclick="selectPracticeDirection('e2j', this)">英語 → 日本語</button>
-                <button class="dir-btn" data-dir="both" onclick="selectPracticeDirection('both', this)">ランダム両方</button>
             </div>
             <p style="color:#666; margin:15px 0;">きゅうを 1つ えらんでね。ランダムで10問 でるよ！</p>
             <div class="grade-buttons" id="practice-grade-buttons"></div>
@@ -199,7 +198,6 @@
             <div class="direction-buttons" id="test-direction-buttons">
                 <button class="dir-btn selected" data-dir="j2e" onclick="selectTestDirection('j2e', this)">日本語 → 英語</button>
                 <button class="dir-btn" data-dir="e2j" onclick="selectTestDirection('e2j', this)">英語 → 日本語</button>
-                <button class="dir-btn" data-dir="both" onclick="selectTestDirection('both', this)">ランダム両方</button>
             </div>
             <p style="color:#666; margin:15px 0;">しゅつだいはんいを えらんでね（ふくすう せんたく できるよ）</p>
             <div class="grade-buttons" id="test-grade-buttons"></div>
@@ -727,6 +725,7 @@ let practiceInRetryMode = false;
 let practiceCurrentQ = null; // 現在表示中の問題（本編/やりなおし共通で参照）
 
 function selectPracticeMode(mode, btn) {
+    if (mode === 'input' && practiceDirection === 'e2j') return; // 英→日は選択式のみ
     practiceMode = mode;
     document.querySelectorAll('#practice-mode-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
@@ -736,6 +735,21 @@ function selectPracticeDirection(dir, btn) {
     practiceDirection = dir;
     document.querySelectorAll('#practice-direction-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
+    updatePracticeModeAvailability();
+}
+
+// 英語→日本語のときは選択式のみに固定する
+function updatePracticeModeAvailability() {
+    const inputBtn = document.querySelector('#practice-mode-buttons .dir-btn[data-mode="input"]');
+    const choiceBtn = document.querySelector('#practice-mode-buttons .dir-btn[data-mode="choice"]');
+    if (practiceDirection === 'e2j') {
+        inputBtn.disabled = true;
+        inputBtn.style.opacity = '0.4'; inputBtn.style.cursor = 'not-allowed';
+        if (practiceMode === 'input') { practiceMode = 'choice'; inputBtn.classList.remove('selected'); choiceBtn.classList.add('selected'); }
+    } else {
+        inputBtn.disabled = false;
+        inputBtn.style.opacity = ''; inputBtn.style.cursor = '';
+    }
 }
 
 function initPracticeButtons() {
@@ -928,6 +942,7 @@ let testMode = 'input';
 let testUserAnswer = '';
 
 function selectTestMode(mode, btn) {
+    if (mode === 'input' && testDirection === 'e2j') return; // 英→日は選択式のみ
     testMode = mode;
     document.querySelectorAll('#test-mode-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
@@ -937,6 +952,21 @@ function selectTestDirection(dir, btn) {
     testDirection = dir;
     document.querySelectorAll('#test-direction-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
+    updateTestModeAvailability();
+}
+
+// 英語→日本語のときは選択式のみに固定する
+function updateTestModeAvailability() {
+    const inputBtn = document.querySelector('#test-mode-buttons .dir-btn[data-mode="input"]');
+    const choiceBtn = document.querySelector('#test-mode-buttons .dir-btn[data-mode="choice"]');
+    if (testDirection === 'e2j') {
+        inputBtn.disabled = true;
+        inputBtn.style.opacity = '0.4'; inputBtn.style.cursor = 'not-allowed';
+        if (testMode === 'input') { testMode = 'choice'; inputBtn.classList.remove('selected'); choiceBtn.classList.add('selected'); }
+    } else {
+        inputBtn.disabled = false;
+        inputBtn.style.opacity = ''; inputBtn.style.cursor = '';
+    }
 }
 
 function initTestButtons() {
