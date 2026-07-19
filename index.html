@@ -804,6 +804,7 @@ function showPracticeQuestion() {
         document.getElementById('practice-input-area').style.display = 'block';
         document.getElementById('practice-choice-area').style.display = 'none';
         document.getElementById('practice-check-btn').style.display = 'inline-block';
+        document.getElementById('practice-input').disabled = false;
         document.getElementById('practice-input').value = '';
         document.getElementById('practice-input').focus();
     }
@@ -859,6 +860,7 @@ function practiceCheck() {
             practiceRetryQueue.push(q);
         }
     }
+    document.getElementById('practice-input').disabled = true;
     document.getElementById('practice-check-btn').style.display = 'none';
     document.getElementById('practice-next-btn').style.display = 'inline-block';
 }
@@ -1000,6 +1002,7 @@ function showTestQuestion() {
         document.getElementById('test-input-area').style.display = 'block';
         document.getElementById('test-choice-area').style.display = 'none';
         document.getElementById('test-check-btn').style.display = 'inline-block';
+        document.getElementById('test-input').disabled = false;
         document.getElementById('test-input').value = '';
         document.getElementById('test-input').focus();
     }
@@ -1047,6 +1050,7 @@ function testCheck() {
         playWrongSE();
     }
     testResults.push({ q, answer: userAnswer, correct: isCorrect, displayAnswer, question: q.direction==='e2j'?q.en:q.jp });
+    document.getElementById('test-input').disabled = true;
     document.getElementById('test-check-btn').style.display = 'none';
     document.getElementById('test-next-btn').style.display = 'inline-block';
 }
