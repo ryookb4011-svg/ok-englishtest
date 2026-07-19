@@ -805,7 +805,8 @@ function showPracticeResult() {
     document.getElementById('practice-result-score').textContent = `${practiceScore} / ${total}`;
     const ratio = practiceScore / total;
     let stars='', msg='';
-    if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    if (ratio === 1) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    else if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='あとちょっとで かんぺき！'; }
     else if (ratio >= 0.7) { stars='⭐⭐'; msg='よくできたね！'; }
     else if (ratio >= 0.5) { stars='⭐'; msg='がんばったね！'; }
     else { stars='💪'; msg='もういちど やってみよう！'; }
@@ -976,7 +977,8 @@ function showTestResult() {
     document.getElementById('test-result-score').textContent = `${points}てん`;
     const ratio = testScore/total;
     let stars='', msg='';
-    if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    if (ratio === 1) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    else if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='あとちょっとで かんぺき！'; }
     else if (ratio >= 0.7) { stars='⭐⭐'; msg='よくできたね！'; }
     else if (ratio >= 0.5) { stars='⭐'; msg='がんばったね！'; }
     else { stars='💪'; msg='もういちど やってみよう！'; }
