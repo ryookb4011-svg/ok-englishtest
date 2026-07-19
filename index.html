@@ -89,6 +89,37 @@
 <body>
 <div id="letter-bg"></div>
 
+<button id="settings-btn" onclick="openSettings()" title="せってい">⚙️</button>
+
+<!-- 設定モーダル -->
+<div id="settings-modal" style="display:none;">
+    <div class="settings-box">
+        <h2>⚙️ せってい</h2>
+        <div class="settings-row">
+            <span>🎁 ごほうびゲーム</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="reward-game-toggle" checked onchange="saveRewardGameSetting()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <p style="color:#888; font-size:0.8em; margin-top:8px;">テストを3かい やると ミニゲームが でるよ</p>
+        <button class="btn btn-primary" onclick="closeSettings()" style="margin-top:15px;">とじる</button>
+    </div>
+</div>
+
+<!-- ごほうびゲーム モーダル -->
+<div id="reward-game-modal" style="display:none;">
+    <div class="reward-game-box">
+        <h2 id="reward-game-title">🎁 ごほうびゲーム！</h2>
+        <p id="reward-game-howto" style="color:#666; font-size:0.9em; margin-bottom:10px;"></p>
+        <canvas id="reward-game-canvas" width="320" height="420"></canvas>
+        <div id="reward-game-controls"></div>
+        <div style="margin-top:12px;">
+            <button class="btn btn-primary" id="reward-game-skip-btn" onclick="skipRewardGame()">スキップして つづける</button>
+        </div>
+    </div>
+</div>
+
 <div class="container" id="main-app">
     <!-- ログインバー -->
     <div id="login-bar">
@@ -152,9 +183,6 @@
             <div class="result-stars" id="practice-result-stars"></div>
             <p style="font-size:1.2em; color:#666; margin:15px 0;" id="practice-result-message"></p>
             <button class="btn btn-primary" onclick="backToPracticeSelect()">きゅうを えらびなおす</button>
-            <div style="margin-top:20px; text-align:center;">
-                <a href="https://rpx.a8.net/svt/ejp?a8mat=4B8450+3JET0A+2HOM+63OY9&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0ea62065.34400275.0ea62066.204f04c0%2Fa18081801907_4B8450_3JET0A_2HOM_63OY9%3Fpc%3Dhttp%253A%252F%252Fwww.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Fm.rakuten.co.jp%252F" rel="nofollow"><img src="https://hbb.afl.rakuten.co.jp/hsb/0ec09b9c.483b4874.0eb4bbaa.95151395/" border="0"></a><img border="0" width="1" height="1" src="https://www12.a8.net/0.gif?a8mat=4B8450+3JET0A+2HOM+63OY9" alt="">
-            </div>
         </div>
     </div>
 
@@ -202,9 +230,6 @@
             <p style="font-size:1.2em; color:#666; margin:15px 0;" id="test-result-message"></p>
             <div id="test-review" style="text-align:left; margin:20px 0;"></div>
             <button class="btn btn-primary" onclick="backToTestSelect()">もういちど テスト</button>
-            <div style="margin-top:20px; text-align:center;">
-                <a href="https://rpx.a8.net/svt/ejp?a8mat=4B8450+3JET0A+2HOM+63OY9&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0ea62065.34400275.0ea62066.204f04c0%2Fa18081801907_4B8450_3JET0A_2HOM_63OY9%3Fpc%3Dhttp%253A%252F%252Fwww.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Fm.rakuten.co.jp%252F" rel="nofollow"><img src="https://hbb.afl.rakuten.co.jp/hsb/0ec09b9c.483b4874.0eb4bbaa.95151395/" border="0"></a><img border="0" width="1" height="1" src="https://www12.a8.net/0.gif?a8mat=4B8450+3JET0A+2HOM+63OY9" alt="">
-            </div>
         </div>
     </div>
 
@@ -222,6 +247,49 @@
 </div>
 
 <style>
+    #settings-btn {
+        position: fixed; top: 15px; right: 15px; z-index: 900;
+        background: rgba(255,255,255,0.85); border: none; border-radius: 50%;
+        width: 44px; height: 44px; font-size: 1.4em; cursor: pointer;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    #settings-modal, #reward-game-modal {
+        position: fixed; top:0; left:0; right:0; bottom:0; z-index: 2000;
+        background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+    }
+    .settings-box, .reward-game-box {
+        background: #fff; border-radius: 20px; padding: 30px 35px; max-width: 90%;
+        text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    }
+    .settings-box h2, .reward-game-box h2 { color: #5a3d8a; margin-bottom: 15px; }
+    .settings-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 20px;
+        font-size: 1.1em; color: #333; padding: 8px 0;
+    }
+    .toggle-switch { position: relative; display: inline-block; width: 54px; height: 30px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0;
+        background-color: #ccc; border-radius: 30px; transition: 0.3s;
+    }
+    .toggle-slider:before {
+        position: absolute; content: ""; height: 24px; width: 24px; left: 3px; bottom: 3px;
+        background-color: #fff; border-radius: 50%; transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background-color: #7c4dff; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+    #reward-game-canvas {
+        background: #222; border-radius: 10px; touch-action: none;
+        max-width: 100%; display: block; margin: 0 auto;
+    }
+    #reward-game-controls {
+        display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap;
+    }
+    .game-ctrl-btn {
+        width: 56px; height: 56px; font-size: 1.5em; border: none; border-radius: 14px;
+        background: #7c4dff; color: #fff; cursor: pointer; user-select: none;
+    }
+    .game-ctrl-btn:active { background: #5c35c9; }
     #login-bar {
         background: rgba(255,255,255,0.9); border-radius: 16px; padding: 14px 18px;
         margin-bottom: 20px; text-align: center;
@@ -1018,6 +1086,7 @@ function showTestResult() {
     const modeLabel = testMode === 'choice' ? '選択式' : '入力式';
     const gradesLabel = Array.from(selectedTestGrades).sort((a,b)=>b-a).map(g=>g+'級').join(',');
     saveHistory('テスト', `${gradesLabel} ${dirLabel} ${modeLabel}`, testScore, total);
+    incrementTestCompletionCount();
 }
 
 function backToTestSelect() {
@@ -1185,10 +1254,315 @@ function renderHistory() {
     }).join('');
 }
 
-// ========== 起動 ==========
-initPracticeButtons();
-initTestButtons();
-initLetterBackground();
+// ========== せってい：ごほうびゲーム ON/OFF ==========
+const REWARD_GAME_SETTING_KEY = 'eiwa_reward_game_enabled';
+const TEST_COMPLETE_COUNT_KEY = 'eiwa_test_complete_count';
+const REWARD_GAME_TYPE_KEY = 'eiwa_reward_game_type'; // 次に出すゲームの種類（テトリス/ブロック崩し交互）
+
+function isRewardGameEnabled() {
+    const v = localStorage.getItem(REWARD_GAME_SETTING_KEY);
+    return v === null ? true : v === 'true'; // デフォルトON
+}
+function openSettings() {
+    document.getElementById('reward-game-toggle').checked = isRewardGameEnabled();
+    document.getElementById('settings-modal').style.display = 'flex';
+}
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function saveRewardGameSetting() {
+    const checked = document.getElementById('reward-game-toggle').checked;
+    localStorage.setItem(REWARD_GAME_SETTING_KEY, checked ? 'true' : 'false');
+}
+
+function incrementTestCompletionCount() {
+    let count = parseInt(localStorage.getItem(TEST_COMPLETE_COUNT_KEY) || '0', 10);
+    count++;
+    localStorage.setItem(TEST_COMPLETE_COUNT_KEY, String(count));
+    if (count % 3 === 0 && isRewardGameEnabled()) {
+        // 少し間を置いて結果画面が見えた後にゲームを起動
+        setTimeout(() => startRewardGame(), 600);
+    }
+}
+
+function getNextRewardGameType() {
+    let last = localStorage.getItem(REWARD_GAME_TYPE_KEY) || 'block'; // 前回のタイプ
+    const next = last === 'tetris' ? 'block' : 'tetris';
+    localStorage.setItem(REWARD_GAME_TYPE_KEY, next);
+    return next;
+}
+
+function startRewardGame() {
+    const type = getNextRewardGameType();
+    document.getElementById('reward-game-modal').style.display = 'flex';
+    if (type === 'tetris') {
+        document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：テトリス';
+        document.getElementById('reward-game-howto').textContent =
+            '← → で いどう／↓ で はやくおとす／↑ で かいてん（スマホは したの ボタン）';
+        setupTetrisControls();
+        startTetris();
+    } else {
+        document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：ブロックくずし';
+        document.getElementById('reward-game-howto').textContent =
+            '← → で バーを うごかそう（スマホは がめんを タップ／ドラッグ）';
+        setupBlockControls();
+        startBlockBreaker();
+    }
+}
+
+function endRewardGame() {
+    stopRewardGameLoop();
+    document.getElementById('reward-game-modal').style.display = 'none';
+    document.getElementById('reward-game-controls').innerHTML = '';
+}
+function skipRewardGame() { endRewardGame(); }
+
+// ========== ごほうびゲーム 共通 ==========
+let rewardGameLoopId = null;
+let rewardGameKeyHandler = null;
+function stopRewardGameLoop() {
+    if (rewardGameLoopId) { clearInterval(rewardGameLoopId); rewardGameLoopId = null; }
+    if (rewardGameKeyHandler) { document.removeEventListener('keydown', rewardGameKeyHandler); rewardGameKeyHandler = null; }
+}
+
+// ========== テトリス ==========
+const TETRIS_COLS = 8, TETRIS_ROWS = 14, TETRIS_BLOCK = 30;
+let tetrisBoard, tetrisPiece, tetrisX, tetrisY, tetrisScore, tetrisOver;
+const TETRIS_SHAPES = {
+    I: [[1,1,1,1]],
+    O: [[1,1],[1,1]],
+    T: [[1,1,1],[0,1,0]],
+    L: [[1,0],[1,0],[1,1]],
+    J: [[0,1],[0,1],[1,1]],
+    S: [[0,1,1],[1,1,0]],
+    Z: [[1,1,0],[0,1,1]]
+};
+const TETRIS_COLORS = { I:'#4DD0E1', O:'#FFD54F', T:'#BA68C8', L:'#FF8A65', J:'#4FC3F7', S:'#81C784', Z:'#F06292' };
+
+function tetrisNewPiece() {
+    const keys = Object.keys(TETRIS_SHAPES);
+    const key = keys[Math.floor(Math.random() * keys.length)];
+    return { shape: TETRIS_SHAPES[key].map(r => [...r]), color: TETRIS_COLORS[key] };
+}
+
+function startTetris() {
+    tetrisBoard = Array.from({length: TETRIS_ROWS}, () => Array(TETRIS_COLS).fill(null));
+    tetrisScore = 0; tetrisOver = false;
+    tetrisPiece = tetrisNewPiece();
+    tetrisX = Math.floor((TETRIS_COLS - tetrisPiece.shape[0].length) / 2);
+    tetrisY = 0;
+    drawTetris();
+
+    rewardGameKeyHandler = (e) => {
+        if (e.key === 'ArrowLeft') tetrisMove(-1);
+        else if (e.key === 'ArrowRight') tetrisMove(1);
+        else if (e.key === 'ArrowDown') tetrisDrop();
+        else if (e.key === 'ArrowUp') tetrisRotate();
+    };
+    document.addEventListener('keydown', rewardGameKeyHandler);
+
+    if (rewardGameLoopId) clearInterval(rewardGameLoopId);
+    rewardGameLoopId = setInterval(() => { if (!tetrisOver) tetrisTick(); }, 600);
+}
+
+function tetrisCollide(px, py, shape) {
+    for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[r].length; c++) {
+            if (!shape[r][c]) continue;
+            const bx = px + c, by = py + r;
+            if (bx < 0 || bx >= TETRIS_COLS || by >= TETRIS_ROWS) return true;
+            if (by >= 0 && tetrisBoard[by][bx]) return true;
+        }
+    }
+    return false;
+}
+
+function tetrisMove(dx) {
+    if (tetrisOver) return;
+    if (!tetrisCollide(tetrisX + dx, tetrisY, tetrisPiece.shape)) { tetrisX += dx; drawTetris(); }
+}
+
+function tetrisRotate() {
+    if (tetrisOver) return;
+    const rotated = tetrisPiece.shape[0].map((_, i) => tetrisPiece.shape.map(row => row[i]).reverse());
+    if (!tetrisCollide(tetrisX, tetrisY, rotated)) { tetrisPiece.shape = rotated; drawTetris(); }
+}
+
+function tetrisDrop() {
+    if (tetrisOver) return;
+    while (!tetrisCollide(tetrisX, tetrisY + 1, tetrisPiece.shape)) { tetrisY++; }
+    tetrisTick();
+}
+
+function tetrisTick() {
+    if (!tetrisCollide(tetrisX, tetrisY + 1, tetrisPiece.shape)) {
+        tetrisY++;
+    } else {
+        // 固定
+        tetrisPiece.shape.forEach((row, r) => row.forEach((v, c) => {
+            if (v) {
+                const by = tetrisY + r, bx = tetrisX + c;
+                if (by >= 0) tetrisBoard[by][bx] = tetrisPiece.color;
+            }
+        }));
+        // ライン消去
+        for (let r = TETRIS_ROWS - 1; r >= 0; r--) {
+            if (tetrisBoard[r].every(cell => cell)) {
+                tetrisBoard.splice(r, 1);
+                tetrisBoard.unshift(Array(TETRIS_COLS).fill(null));
+                tetrisScore += 100;
+                r++;
+            }
+        }
+        tetrisPiece = tetrisNewPiece();
+        tetrisX = Math.floor((TETRIS_COLS - tetrisPiece.shape[0].length) / 2);
+        tetrisY = 0;
+        if (tetrisCollide(tetrisX, tetrisY, tetrisPiece.shape)) {
+            tetrisOver = true;
+        }
+    }
+    drawTetris();
+}
+
+function drawTetris() {
+    const canvas = document.getElementById('reward-game-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#222'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const offsetX = (canvas.width - TETRIS_COLS * TETRIS_BLOCK) / 2;
+    // 盤面
+    for (let r = 0; r < TETRIS_ROWS; r++) {
+        for (let c = 0; c < TETRIS_COLS; c++) {
+            if (tetrisBoard[r][c]) {
+                ctx.fillStyle = tetrisBoard[r][c];
+                ctx.fillRect(offsetX + c*TETRIS_BLOCK, r*TETRIS_BLOCK, TETRIS_BLOCK-2, TETRIS_BLOCK-2);
+            }
+        }
+    }
+    // 現在ピース
+    ctx.fillStyle = tetrisPiece.color;
+    tetrisPiece.shape.forEach((row, r) => row.forEach((v, c) => {
+        if (v) ctx.fillRect(offsetX + (tetrisX+c)*TETRIS_BLOCK, (tetrisY+r)*TETRIS_BLOCK, TETRIS_BLOCK-2, TETRIS_BLOCK-2);
+    }));
+    // スコア
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
+    ctx.fillText('スコア: ' + tetrisScore, 10, canvas.height - 10);
+    if (tetrisOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#fff'; ctx.font = '24px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('ゲームオーバー', canvas.width/2, canvas.height/2);
+        ctx.font = '16px sans-serif';
+        ctx.fillText('スキップして つづけよう', canvas.width/2, canvas.height/2 + 30);
+        ctx.textAlign = 'left';
+    }
+}
+
+function setupTetrisControls() {
+    const controls = document.getElementById('reward-game-controls');
+    controls.innerHTML = `
+        <button class="game-ctrl-btn" ontouchstart="tetrisMove(-1)" onclick="tetrisMove(-1)">◀</button>
+        <button class="game-ctrl-btn" ontouchstart="tetrisRotate()" onclick="tetrisRotate()">🔄</button>
+        <button class="game-ctrl-btn" ontouchstart="tetrisDrop()" onclick="tetrisDrop()">▼</button>
+        <button class="game-ctrl-btn" ontouchstart="tetrisMove(1)" onclick="tetrisMove(1)">▶</button>
+    `;
+}
+
+// ========== ブロックくずし ==========
+let bbBallX, bbBallY, bbVX, bbVY, bbPaddleX, bbBricks, bbScore, bbOver, bbWin;
+const BB_W = 320, BB_H = 420, BB_PADDLE_W = 70, BB_PADDLE_H = 12, BB_BALL_R = 6;
+const BB_ROWS = 4, BB_COLS = 7, BB_BRICK_W = 40, BB_BRICK_H = 18;
+
+function startBlockBreaker() {
+    bbBallX = BB_W/2; bbBallY = BB_H - 50; bbVX = 2.4; bbVY = -3;
+    bbPaddleX = BB_W/2 - BB_PADDLE_W/2;
+    bbScore = 0; bbOver = false; bbWin = false;
+    bbBricks = [];
+    const colors = ['#F06292','#FFD54F','#81C784','#4FC3F7'];
+    for (let r = 0; r < BB_ROWS; r++) {
+        for (let c = 0; c < BB_COLS; c++) {
+            bbBricks.push({ x: c*(BB_BRICK_W+4)+8, y: r*(BB_BRICK_H+4)+20, alive: true, color: colors[r % colors.length] });
+        }
+    }
+    drawBlockBreaker();
+
+    rewardGameKeyHandler = (e) => {
+        if (e.key === 'ArrowLeft') bbPaddleX = Math.max(0, bbPaddleX - 25);
+        else if (e.key === 'ArrowRight') bbPaddleX = Math.min(BB_W - BB_PADDLE_W, bbPaddleX + 25);
+    };
+    document.addEventListener('keydown', rewardGameKeyHandler);
+
+    const canvas = document.getElementById('reward-game-canvas');
+    canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.width / rect.width;
+        bbPaddleX = Math.max(0, Math.min(BB_W - BB_PADDLE_W, (e.clientX - rect.left) * scale - BB_PADDLE_W/2));
+    };
+    canvas.ontouchmove = (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.width / rect.width;
+        const touchX = e.touches[0].clientX;
+        bbPaddleX = Math.max(0, Math.min(BB_W - BB_PADDLE_W, (touchX - rect.left) * scale - BB_PADDLE_W/2));
+    };
+
+    if (rewardGameLoopId) clearInterval(rewardGameLoopId);
+    rewardGameLoopId = setInterval(bbTick, 1000/45);
+}
+
+function bbTick() {
+    if (bbOver) return;
+    bbBallX += bbVX; bbBallY += bbVY;
+    if (bbBallX < BB_BALL_R || bbBallX > BB_W - BB_BALL_R) bbVX *= -1;
+    if (bbBallY < BB_BALL_R) bbVY *= -1;
+    // パドル判定
+    if (bbBallY > BB_H - 30 - BB_BALL_R && bbBallY < BB_H - 30 + BB_BALL_R &&
+        bbBallX > bbPaddleX && bbBallX < bbPaddleX + BB_PADDLE_W) {
+        bbVY = -Math.abs(bbVY);
+        const hitPos = (bbBallX - (bbPaddleX + BB_PADDLE_W/2)) / (BB_PADDLE_W/2);
+        bbVX = hitPos * 4;
+    }
+    // ブロック判定
+    bbBricks.forEach(b => {
+        if (!b.alive) return;
+        if (bbBallX > b.x && bbBallX < b.x + BB_BRICK_W && bbBallY > b.y && bbBallY < b.y + BB_BRICK_H) {
+            b.alive = false; bbVY *= -1; bbScore += 50;
+        }
+    });
+    if (bbBricks.every(b => !b.alive)) { bbOver = true; bbWin = true; }
+    if (bbBallY > BB_H + BB_BALL_R) { bbOver = true; bbWin = false; }
+    drawBlockBreaker();
+}
+
+function drawBlockBreaker() {
+    const canvas = document.getElementById('reward-game-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#222'; ctx.fillRect(0, 0, BB_W, BB_H);
+    bbBricks.forEach(b => {
+        if (!b.alive) return;
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, BB_BRICK_W - 3, BB_BRICK_H - 3);
+    });
+    ctx.fillStyle = '#7c4dff';
+    ctx.fillRect(bbPaddleX, BB_H - 30, BB_PADDLE_W, BB_PADDLE_H);
+    ctx.beginPath();
+    ctx.arc(bbBallX, bbBallY, BB_BALL_R, 0, Math.PI*2);
+    ctx.fillStyle = '#FFD54F'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
+    ctx.fillText('スコア: ' + bbScore, 10, BB_H - 8);
+    if (bbOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,BB_W,BB_H);
+        ctx.fillStyle = '#fff'; ctx.font = '24px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(bbWin ? '🎉 クリア！' : 'ゲームオーバー', BB_W/2, BB_H/2);
+        ctx.font = '16px sans-serif';
+        ctx.fillText('スキップして つづけよう', BB_W/2, BB_H/2 + 30);
+        ctx.textAlign = 'left';
+    }
+}
+
+function setupBlockControls() {
+    const controls = document.getElementById('reward-game-controls');
+    controls.innerHTML = `
+        <button class="game-ctrl-btn" onclick="bbPaddleX = Math.max(0, bbPaddleX - 30)">◀</button>
+        <button class="game-ctrl-btn" onclick="bbPaddleX = Math.min(BB_W - BB_PADDLE_W, bbPaddleX + 30)">▶</button>
+    `;
+}
 </script>
 </body>
 </html>
