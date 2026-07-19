@@ -102,7 +102,7 @@
                 <span class="toggle-slider"></span>
             </label>
         </div>
-        <p style="color:#888; font-size:0.8em; margin-top:8px;">テストを3かい やると ミニゲームが でるよ</p>
+        <p style="color:#888; font-size:0.8em; margin-top:8px;">テストを2かい やると ミニゲームが でるよ</p>
         <button class="btn btn-primary" onclick="closeSettings()" style="margin-top:15px;">とじる</button>
     </div>
 </div>
@@ -1281,7 +1281,7 @@ function incrementTestCompletionCount() {
     let count = parseInt(localStorage.getItem(TEST_COMPLETE_COUNT_KEY) || '0', 10);
     count++;
     localStorage.setItem(TEST_COMPLETE_COUNT_KEY, String(count));
-    if (count % 3 === 0 && isRewardGameEnabled()) {
+    if (count % 2 === 0 && isRewardGameEnabled()) {
         // 少し間を置いて結果画面が見えた後にゲームを起動
         setTimeout(() => startRewardGame(), 600);
     }
