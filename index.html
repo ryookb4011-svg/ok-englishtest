@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>えいごたんご れんしゅう</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #4fc3f7 0%, #7e57c2 50%, #ff8a65 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        #letter-bg {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1; overflow: hidden; pointer-events: none;
+        }
+        .floating-letter {
+            position: absolute;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', 'Meiryo', sans-serif;
+            font-weight: 900;
+            -webkit-text-stroke: 2px rgba(255,255,255,0.6);
+            text-shadow: 4px 6px 0 rgba(0,0,0,0.15), 0 0 15px rgba(255,255,255,0.3);
+            animation: floatUpDown ease-in-out infinite, spinSlight ease-in-out infinite;
+            user-select: none;
+        }
+        @keyframes floatUpDown {
+            0%, 100% { transform: translateY(0) rotate(var(--rot)); }
+            50% { transform: translateY(-30px) rotate(var(--rot)); }
+        }
+        @keyframes spinSlight {
+            0%, 100% { transform: rotate(calc(var(--rot) - 8deg)); }
+            50% { transform: rotate(calc(var(--rot) + 8deg)); }
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            text-align: center; color: #fff; font-size: 2.2em;
+            margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center; color: rgba(255,255,255,0.9);
+            font-size: 1.1em; margin-bottom: 30px;
+        }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 12px 20px; border: none; border-radius: 12px 12px 0 0;
+            font-size: 1em; font-family: 'Meiryo', sans-serif; cursor: pointer;
+            background: rgba(255,255,255,0.3); color: #fff; transition: all 0.3s;
+        }
+        .tab-btn.active { background: #fff; color: #5a3d8a; font-weight: bold; }
+        .tab-content {
+            display: none; background: rgba(255,255,255,0.88); border-radius: 20px;
+            padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(2px);
+        }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+<div id="letter-bg"></div>
+
+<!-- 名前選択オーバーレイ -->
+<div id="name-select-overlay">
+    <div class="name-select-box">
+        <h2>👋 なまえを えらんでね！</h2>
+        <select id="name-select-dropdown">
+            <option value="">-- なまえを えらぶ --</option>
+            <option value="あおい">あおい</option>
+            <option value="はるか">はるか</option>
+            <option value="ゆう">ゆう</option>
+            <option value="テスト用">テスト用</option>
+        </select>
+        <button class="btn btn-primary" onclick="confirmNameSelect()" style="margin-top:15px;">はじめる！</button>
+    </div>
+</div>
+
+<div class="container" id="main-app" style="display:none;">
+    <div id="user-badge"></div>
+    <h1>🌟 えいごたんご れんしゅう 🌟</h1>
+    <p class="subtitle">きゅうを えらんで ちゃれんじ しよう！</p>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('practice')">🔄 れんしゅう</button>
+        <button class="tab-btn" onclick="switchTab('test')">📝 テスト</button>
+        <button class="tab-btn" onclick="switchTab('history')">📊 きろく</button>
+    </div>
+
+    <!-- 練習モード -->
+    <div id="tab-practice" class="tab-content active">
+        <div id="practice-select-area">
+            <h2 style="color:#5a3d8a; margin-bottom:15px;">🔄 れんしゅうモード</h2>
+            <p style="color:#666; margin-bottom:10px;">こたえかたを えらんでね</p>
+            <div class="direction-buttons" id="practice-mode-buttons">
+                <button class="dir-btn selected" data-mode="input" onclick="selectPracticeMode('input', this)">✏️ にゅうりょく</button>
+                <button class="dir-btn" data-mode="choice" onclick="selectPracticeMode('choice', this)">🔘 せんたく</button>
+            </div>
+            <p style="color:#666; margin:15px 0 10px;">しゅるいを えらんでね</p>
+            <div class="direction-buttons" id="practice-direction-buttons">
+                <button class="dir-btn selected" data-dir="j2e" onclick="selectPracticeDirection('j2e', this)">日本語 → 英語</button>
+                <button class="dir-btn" data-dir="e2j" onclick="selectPracticeDirection('e2j', this)">英語 → 日本語</button>
+                <button class="dir-btn" data-dir="both" onclick="selectPracticeDirection('both', this)">ランダム両方</button>
+            </div>
+            <p style="color:#666; margin:15px 0;">きゅうを 1つ えらんでね。ランダムで10問 でるよ！</p>
+            <div class="grade-buttons" id="practice-grade-buttons"></div>
+        </div>
+        <div id="practice-quiz-area" style="display:none;">
+            <button class="quit-btn" onclick="quitPractice()">🏠 やめる</button>
+            <div class="score-display" id="practice-progress">もんだい 1 / 10</div>
+            <div class="direction-badge" id="practice-direction"></div>
+            <div class="question-word" id="practice-question"></div>
+            <div class="answer-area" id="practice-input-area">
+                <input type="text" id="practice-input" placeholder="こたえを にゅうりょく" autocomplete="off">
+            </div>
+            <div class="choice-area" id="practice-choice-area" style="display:none;"></div>
+            <div class="feedback" id="practice-feedback"></div>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" id="practice-check-btn" onclick="practiceCheck()">こたえあわせ</button>
+                <button class="btn btn-success" id="practice-next-btn" onclick="practiceNext()" style="display:none">つぎへ →</button>
+            </div>
+        </div>
+        <div id="practice-result-area" style="display:none;" class="result-area">
+            <h2>🎉 おつかれさま！</h2>
+            <div class="result-score" id="practice-result-score">0 / 10</div>
+            <div class="result-stars" id="practice-result-stars"></div>
+            <p style="font-size:1.2em; color:#666; margin:15px 0;" id="practice-result-message"></p>
+            <button class="btn btn-primary" onclick="backToPracticeSelect()">きゅうを えらびなおす</button>
+        </div>
+    </div>
+
+    <!-- テストモード -->
+    <div id="tab-test" class="tab-content">
+        <div id="test-select-area">
+            <h2 style="color:#5a3d8a; margin-bottom:15px;">📝 テストモード</h2>
+            <p style="color:#666; margin-bottom:10px;">こたえかたを えらんでね</p>
+            <div class="direction-buttons" id="test-mode-buttons">
+                <button class="dir-btn selected" data-mode="input" onclick="selectTestMode('input', this)">✏️ にゅうりょく</button>
+                <button class="dir-btn" data-mode="choice" onclick="selectTestMode('choice', this)">🔘 せんたく</button>
+            </div>
+            <p style="color:#666; margin:15px 0 10px;">しゅるいを えらんでね</p>
+            <div class="direction-buttons" id="test-direction-buttons">
+                <button class="dir-btn selected" data-dir="j2e" onclick="selectTestDirection('j2e', this)">日本語 → 英語</button>
+                <button class="dir-btn" data-dir="e2j" onclick="selectTestDirection('e2j', this)">英語 → 日本語</button>
+                <button class="dir-btn" data-dir="both" onclick="selectTestDirection('both', this)">ランダム両方</button>
+            </div>
+            <p style="color:#666; margin:15px 0;">しゅつだいはんいを えらんでね（ふくすう せんたく できるよ）</p>
+            <div class="grade-buttons" id="test-grade-buttons"></div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn btn-primary" onclick="startTest()">テスト スタート！</button>
+            </div>
+        </div>
+        <div id="test-quiz-area" style="display:none;">
+            <button class="quit-btn" onclick="quitTest()">🏠 やめる</button>
+            <div class="progress-text" id="test-progress-text">もんだい 1 / 10</div>
+            <div class="progress-bar"><div class="progress-fill" id="test-progress-fill" style="width:0%"></div></div>
+            <div class="direction-badge" id="test-direction"></div>
+            <div class="question-word" id="test-question"></div>
+            <div class="answer-area" id="test-input-area">
+                <input type="text" id="test-input" placeholder="こたえを にゅうりょく" autocomplete="off">
+            </div>
+            <div class="choice-area" id="test-choice-area" style="display:none;"></div>
+            <div class="feedback" id="test-feedback"></div>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" id="test-check-btn" onclick="testCheck()">こたえあわせ</button>
+                <button class="btn btn-success" id="test-next-btn" onclick="testNext()" style="display:none">つぎへ →</button>
+            </div>
+        </div>
+        <div id="test-result-area" style="display:none;" class="result-area">
+            <h2>🎉 テストけっか</h2>
+            <div class="result-score" id="test-result-score">0てん</div>
+            <div class="result-stars" id="test-result-stars"></div>
+            <p style="font-size:1.2em; color:#666; margin:15px 0;" id="test-result-message"></p>
+            <div id="test-review" style="text-align:left; margin:20px 0;"></div>
+            <button class="btn btn-primary" onclick="backToTestSelect()">もういちど テスト</button>
+        </div>
+    </div>
+
+    <!-- きろくタブ -->
+    <div id="tab-history" class="tab-content">
+        <h2 style="color:#5a3d8a; margin-bottom:15px;">📊 きろく</h2>
+        <p style="color:#666; margin-bottom:15px;"><span id="history-username-label"></span>さんの きろく（さいきん20けん）</p>
+        <div class="history-box" id="history-list"></div>
+    </div>
+</div>
+
+<style>
+    #name-select-overlay {
+        position: fixed; top:0; left:0; right:0; bottom:0; z-index: 1000;
+        background: linear-gradient(135deg, #4fc3f7 0%, #7e57c2 50%, #ff8a65 100%);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .name-select-box {
+        background: rgba(255,255,255,0.95); border-radius: 24px; padding: 40px 45px;
+        text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); max-width: 90%;
+    }
+    .name-select-box h2 { color: #5a3d8a; margin-bottom: 20px; font-size: 1.5em; }
+    #name-select-dropdown {
+        font-size: 1.3em; padding: 12px 20px; border-radius: 12px; border: 3px solid #b39ddb;
+        font-family: 'Meiryo', sans-serif; color: #333; background: #fff; cursor: pointer;
+    }
+    #user-badge {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        color: #fff; font-size: 1.05em; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    #user-badge .switch-user-btn {
+        background: rgba(255,255,255,0.25); color: #fff; border: none;
+        padding: 5px 12px; border-radius: 8px; font-size: 0.85em; cursor: pointer; font-family: 'Meiryo', sans-serif;
+    }
+    #user-badge .switch-user-btn:hover { background: rgba(255,255,255,0.4); }
+    .history-box {
+        background: #f8f4ff; border-radius: 14px; padding: 15px; margin-top: 20px;
+        max-height: 220px; overflow-y: auto; text-align: left;
+    }
+    .history-item {
+        display: flex; justify-content: space-between; padding: 6px 10px;
+        border-bottom: 1px solid #e0d4f7; font-size: 0.9em; color: #444;
+    }
+    .quit-btn {
+        display: block; margin: 0 auto 15px; padding: 8px 18px;
+        background: rgba(0,0,0,0.08); color: #666; border: none;
+        border-radius: 10px; font-size: 0.9em; cursor: pointer; font-family: 'Meiryo', sans-serif;
+    }
+    .quit-btn:hover { background: rgba(0,0,0,0.15); }
+    .direction-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
+    .dir-btn {
+        padding: 10px 18px; border: 3px solid #90caf9; border-radius: 12px;
+        background: #e3f2fd; color: #1565c0; font-size: 1em; font-weight: bold;
+        cursor: pointer; font-family: 'Meiryo', sans-serif; transition: all 0.2s;
+    }
+    .dir-btn:hover { background: #bbdefb; }
+    .dir-btn.selected { background: #1e88e5; color: #fff; border-color: #1e88e5; }
+    .choice-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px auto; max-width: 480px; }
+    .choice-btn {
+        padding: 16px 12px; border: 3px solid #ddd; border-radius: 14px;
+        background: #fafafa; color: #333; font-size: 1.15em; font-weight: bold;
+        cursor: pointer; font-family: 'Meiryo', sans-serif; transition: all 0.15s;
+        word-break: break-word;
+    }
+    .choice-btn:hover:not(:disabled) { background: #f0f0ff; border-color: #b39ddb; transform: translateY(-2px); }
+    .choice-btn.picked-correct { background: #c8e6c9; border-color: #4CAF50; color: #2e7d32; }
+    .choice-btn.picked-wrong { background: #ffcdd2; border-color: #f44336; color: #c62828; }
+    .choice-btn:disabled { cursor: default; opacity: 0.85; }
+    @media (max-width: 500px) { .choice-area { grid-template-columns: 1fr; } }
+    .grade-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
+    .grade-btn {
+        padding: 14px 20px; border: 3px solid #b39ddb; border-radius: 14px;
+        background: #f8f4ff; color: #5a3d8a; font-size: 1.1em; font-weight: bold;
+        cursor: pointer; font-family: 'Meiryo', sans-serif; transition: all 0.2s;
+        min-width: 70px;
+    }
+    .grade-btn:hover { background: #ede7f6; transform: translateY(-2px); }
+    .grade-btn.selected { background: #7c4dff; color: #fff; border-color: #7c4dff; }
+
+    .direction-badge {
+        display: inline-block; padding: 6px 16px; border-radius: 20px;
+        background: #ffe082; color: #7a5c00; font-weight: bold; font-size: 0.95em;
+        margin-bottom: 15px;
+    }
+    .question-word {
+        font-size: 2.8em; color: #333; margin: 20px 0; padding: 20px;
+        background: #f8f4ff; border-radius: 15px; border: 3px dashed #b39ddb;
+        word-break: break-word;
+    }
+    .answer-area { margin: 20px 0; }
+    .answer-area input {
+        font-size: 1.5em; padding: 15px 20px; border: 3px solid #ddd;
+        border-radius: 12px; width: 80%; max-width: 300px; text-align: center;
+        font-family: 'Meiryo', sans-serif; outline: none; transition: border-color 0.3s;
+    }
+    .answer-area input:focus { border-color: #7c4dff; }
+    .quiz-area, #practice-quiz-area, #test-quiz-area { text-align: center; padding: 10px 0; }
+    .score-display { text-align: center; color: #5a3d8a; font-size: 1.1em; font-weight: bold; margin-bottom: 10px; }
+    .progress-bar { background: #e0e0e0; border-radius: 10px; height: 12px; margin-bottom: 15px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+    .progress-text { text-align: center; color: #666; margin-bottom: 10px; font-size: 1em; }
+    .btn {
+        padding: 15px 30px; border: none; border-radius: 12px; font-size: 1.2em;
+        font-family: 'Meiryo', sans-serif; cursor: pointer; transition: all 0.3s; margin: 5px;
+    }
+    .btn-primary { background: linear-gradient(135deg, #7c4dff, #536dfe); color: #fff; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(124,77,255,0.4); }
+    .btn-success { background: linear-gradient(135deg, #4CAF50, #66BB6A); color: #fff; }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(76,175,80,0.4); }
+    .feedback { font-size: 1.4em; margin: 20px 0; padding: 15px; border-radius: 12px; display: none; }
+    .feedback.correct { display: block; background: #e8f5e9; color: #2e7d32; animation: bounceIn 0.5s; }
+    .feedback.incorrect { display: block; background: #fce4ec; color: #c62828; animation: shake 0.5s; }
+    .english-answer { font-size: 1.2em; font-weight: bold; color: #5a3d8a; }
+    .result-area { text-align: center; padding: 20px; }
+    .result-area h2 { font-size: 2em; color: #5a3d8a; margin-bottom: 20px; }
+    .result-score { font-size: 3em; color: #4CAF50; margin: 20px 0; }
+    .result-stars { font-size: 3em; margin: 15px 0; }
+    .review-item { padding: 8px 12px; margin: 5px 0; border-radius: 8px; font-size: 0.95em; }
+    .review-correct { background: #e8f5e9; }
+    .review-incorrect { background: #fce4ec; }
+    @keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+    @media (max-width: 600px) {
+        h1 { font-size: 1.6em; }
+        .question-word { font-size: 2em; }
+        .answer-area input { width: 90%; font-size: 1.2em; }
+    }
+</style>
+
+<script>
+// ========== 級ごとの単語データ ==========
+const GRADE_WORDS = {
+    10: [
+        {en:"I", jp:"私は", kana:"わたしは"}, {en:"you", jp:"あなたは"}, {en:"name", jp:"名前", kana:"なまえ"},
+        {en:"cat", jp:"ネコ"}, {en:"dog", jp:"イヌ"}, {en:"bird", jp:"鳥", kana:"とり"},
+        {en:"zoo", jp:"動物園", kana:"どうぶつえん"}, {en:"TV", jp:"テレビ"}, {en:"bag", jp:"カバン"}, {en:"dish", jp:"皿", kana:"さら"}
+    ],
+    9: [
+        {en:"pen", jp:"ペン"}, {en:"ball", jp:"ボール"}, {en:"desk", jp:"机", kana:"つくえ"},
+        {en:"egg", jp:"たまご"}, {en:"tree", jp:"木", kana:"き"}, {en:"car", jp:"車", kana:"くるま"},
+        {en:"bus", jp:"バス"}, {en:"bike", jp:"自転車", kana:"じてんしゃ"}, {en:"train", jp:"電車", kana:"でんしゃ"}, {en:"plane", jp:"飛行機", kana:"ひこうき"}
+    ],
+    8: [
+        {en:"a", jp:"一つの", kana:"ひとつの"}, {en:"my", jp:"私の", kana:"わたしの"}, {en:"your", jp:"あなたの"},
+        {en:"am", jp:"（私は）〜です", kana:"（わたしは）〜です"}, {en:"is", jp:"（これは・あれは）〜です"}, {en:"are", jp:"（あなたは）〜です"},
+        {en:"this", jp:"これ"}, {en:"that", jp:"あれ"}, {en:"it", jp:"それ"}, {en:"good", jp:"よい"}
+    ],
+    7: [
+        {en:"hi", jp:"やあ・こんにちは"}, {en:"hello", jp:"こんにちは"}, {en:"he", jp:"彼は", kana:"かれは"},
+        {en:"she", jp:"彼女は", kana:"かのじょは"}, {en:"we", jp:"私たちは", kana:"わたしたちは"}, {en:"they", jp:"彼らは", kana:"かれらは"},
+        {en:"yes", jp:"はい"}, {en:"no", jp:"いいえ"}, {en:"not", jp:"〜ない"}, {en:"what", jp:"何", kana:"なに"}
+    ],
+    6: [
+        {en:"tea", jp:"お茶", kana:"おちゃ"}, {en:"milk", jp:"牛乳", kana:"ぎゅうにゅう"}, {en:"pencil", jp:"えんぴつ"},
+        {en:"book", jp:"本", kana:"ほん"}, {en:"notebook", jp:"ノート"}, {en:"chair", jp:"いす"},
+        {en:"house", jp:"家", kana:"いえ"}, {en:"room", jp:"部屋", kana:"へや"}, {en:"door", jp:"ドア"}, {en:"window", jp:"窓", kana:"まど"}
+    ],
+    5: [
+        {en:"boy", jp:"男の子", kana:"おとこのこ"}, {en:"girl", jp:"女の子", kana:"おんなのこ"}, {en:"friend", jp:"友達", kana:"ともだち"},
+        {en:"when", jp:"いつ"}, {en:"where", jp:"どこで・どこに"}, {en:"who", jp:"だれ"},
+        {en:"whose", jp:"だれの"}, {en:"park", jp:"公園", kana:"こうえん"}, {en:"library", jp:"図書館", kana:"としょかん"}, {en:"music", jp:"音楽", kana:"おんがく"}
+    ],
+    4: [
+        {en:"one", jp:"1"}, {en:"two", jp:"2"}, {en:"three", jp:"3"},
+        {en:"four", jp:"4"}, {en:"five", jp:"5"}, {en:"six", jp:"6"},
+        {en:"seven", jp:"7"}, {en:"eight", jp:"8"}, {en:"nine", jp:"9"}, {en:"ten", jp:"10"}
+    ],
+    3: [
+        {en:"family", jp:"家族", kana:"かぞく"}, {en:"father", jp:"父", kana:"ちち"}, {en:"mother", jp:"母", kana:"はは"},
+        {en:"brother", jp:"兄弟", kana:"きょうだい"}, {en:"sister", jp:"姉妹", kana:"しまい"}, {en:"school", jp:"学校", kana:"がっこう"},
+        {en:"teacher", jp:"先生", kana:"せんせい"}, {en:"student", jp:"生徒・学生", kana:"せいと・がくせい"}, {en:"uncle", jp:"おじ"}, {en:"aunt", jp:"おば"}
+    ],
+    2: [
+        {en:"eat", jp:"食べる", kana:"たべる"}, {en:"drink", jp:"飲む", kana:"のむ"}, {en:"apple", jp:"リンゴ"},
+        {en:"orange", jp:"オレンジ"}, {en:"soccer", jp:"サッカー"}, {en:"tennis", jp:"テニス"},
+        {en:"baseball", jp:"野球", kana:"やきゅう"}, {en:"in", jp:"〜の中に", kana:"〜のなかに"}, {en:"on", jp:"〜の上に", kana:"〜のうえに"}, {en:"under", jp:"〜の下に", kana:"〜のしたに"}
+    ],
+    1: [
+        {en:"English", jp:"英語", kana:"えいご"}, {en:"like", jp:"好きだ", kana:"すきだ"}, {en:"play", jp:"（スポーツなどを）する"},
+        {en:"have", jp:"持っている", kana:"もっている"}, {en:"look", jp:"見る", kana:"みる"}, {en:"go", jp:"行く", kana:"いく"},
+        {en:"come", jp:"来る", kana:"くる"}, {en:"run", jp:"走る", kana:"はしる"}, {en:"read", jp:"読む", kana:"よむ"}, {en:"speak", jp:"話す", kana:"はなす"}
+    ]
+};
+
+// ========== 日本語こたえの あいまい判定 ==========
+// カタカナ→ひらがな変換（比較用の正規化）
+function toHiragana(str) {
+    return str.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+// 全角/半角スペース、句読点系の表記ゆれを統一
+function normalizeJp(str) {
+    return toHiragana(str)
+        .replace(/[\u3000\s]+/g, '')   // スペース除去（全角/半角）
+        .replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)) // 全角英数記号→半角
+        .trim();
+}
+function stripAnnotations(s) {
+    // （）() の中身ごと除去し、〜/～（波ダッシュ2種）も除去
+    return s.replace(/[（(][^）)]*[）)]/g, '').replace(/[〜～]/g, '').trim();
+}
+function splitAlts(s) {
+    return stripAnnotations(s).split(/[・、,]/).map(x => x.trim()).filter(Boolean);
+}
+function withOptionalWa(s) {
+    const arr = [s];
+    if (s.endsWith('は') && s.length > 1) arr.push(s.slice(0, -1));
+    return arr;
+}
+function buildJpCandidates(entry) {
+    const variants = new Set();
+    splitAlts(entry.jp).forEach(v => withOptionalWa(v).forEach(x => variants.add(x)));
+    if (entry.kana) {
+        splitAlts(entry.kana).forEach(v => withOptionalWa(v).forEach(x => variants.add(x)));
+    }
+    // 括弧を含む元の表記そのものも候補に残す（丸ごと入力した場合にも対応）
+    variants.add(stripAnnotations(entry.jp));
+    return Array.from(variants).map(normalizeJp);
+}
+function isJpCorrect(userInput, entry) {
+    const norm = normalizeJp(userInput);
+    if (!norm) return false;
+    return buildJpCandidates(entry).some(c => c === norm);
+}
+
+// パンパカパーン♪ ファンファーレ（全問正解時）
+function playFanfareSE() {
+    const ctx = getAudioCtx();
+    const notes = [523,523,523,659,784,988,784,988]; // ドドド ミ ソ ド(高) ソ ド(高)
+    const durs  = [120,120,120,150,150,200,150,400];
+    let t = 0;
+    notes.forEach((freq, i) => {
+        const start = ctx.currentTime + t/1000;
+        const dur = durs[i]/1000;
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type='square'; o.frequency.setValueAtTime(freq, start);
+        g.gain.setValueAtTime(0.22, start);
+        g.gain.exponentialRampToValueAtTime(0.001, start + dur*0.95);
+        o.start(start); o.stop(start + dur);
+        // 軽いハモリ
+        const o2=ctx.createOscillator(), g2=ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type='triangle'; o2.frequency.setValueAtTime(freq*1.5, start);
+        g2.gain.setValueAtTime(0.1, start);
+        g2.gain.exponentialRampToValueAtTime(0.001, start + dur*0.9);
+        o2.start(start); o2.stop(start + dur);
+        t += durs[i];
+    });
+}
+
+// ========== 方向に応じた問題生成 ==========
+function buildQuestionsForDirection(words, direction) {
+    const all = [];
+    words.forEach(w => {
+        if (direction === 'e2j' || direction === 'both') all.push({en:w.en, jp:w.jp, kana:w.kana, direction:'e2j'});
+        if (direction === 'j2e' || direction === 'both') all.push({en:w.en, jp:w.jp, kana:w.kana, direction:'j2e'});
+    });
+    return all;
+}
+const GRADES = [10,9,8,7,6,5,4,3,2,1];
+// 「級」グループ。将来「段」を追加する場合は DAN_WORDS を定義し、
+// GROUPS に { key:'dan', words: DAN_WORDS, levels: [...] } を追加すればよい。
+// 紛らわしい選択肢は同じグループ内の単語からのみ生成される。
+const GROUPS = [
+    { key: 'kyu', words: GRADE_WORDS, levels: GRADES }
+    // 今後: { key: 'dan', words: DAN_WORDS, levels: [1,2,3,...] }
+];
+
+// 単語エントリがどのグループに属するかを調べる（紛らわしい選択肢のプール選定に使用）
+function findGroupPoolForEntry(entry) {
+    for (const g of GROUPS) {
+        for (const lv of g.levels) {
+            if (g.words[lv].some(w => w.en === entry.en && w.jp === entry.jp)) {
+                // 同じグループの全単語をフラット化して返す
+                const pool = [];
+                g.levels.forEach(l => g.words[l].forEach(w => pool.push(w)));
+                return pool;
+            }
+        }
+    }
+    // 見つからなければ級グループ全体を返す（フォールバック）
+    const fallback = [];
+    GRADES.forEach(l => GRADE_WORDS[l].forEach(w => fallback.push(w)));
+    return fallback;
+}
+
+// 全単語をフラット化（互換用：級グループ全体）
+const ALL_WORDS_FLAT = [];
+GRADES.forEach(g => GRADE_WORDS[g].forEach(w => ALL_WORDS_FLAT.push(w)));
+
+// 簡易な文字列類似度（先頭文字一致・長さの近さ）でスコア化
+function similarityScore(a, b) {
+    let score = 0;
+    if (a[0] && b[0] && a[0].toLowerCase() === b[0].toLowerCase()) score += 3;
+    const lenDiff = Math.abs(a.length - b.length);
+    score += Math.max(0, 3 - lenDiff);
+    // 共通文字数
+    const setA = new Set(a.toLowerCase());
+    const setB = new Set(b.toLowerCase());
+    let common = 0;
+    setA.forEach(ch => { if (setB.has(ch)) common++; });
+    score += common * 0.5;
+    return score;
+}
+
+// 紛らわしい選択肢（3つの不正解 + 正解＝4択）を作る
+// 選択肢は正解と同じグループ（例: 級なら級、段なら段）の単語からのみ生成する
+function buildChoices(correctEntry, direction) {
+    const correctAnswer = direction === 'e2j' ? correctEntry.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'') : correctEntry.en;
+    const groupPool = findGroupPoolForEntry(correctEntry);
+    const pool = groupPool.filter(w => w.en !== correctEntry.en);
+    const targetKey = direction === 'e2j' ? 'jp' : 'en';
+    const cleanCorrectRaw = direction === 'e2j' ? correctEntry.en : correctEntry.jp;
+
+    // 類似度でソート（似ている単語ほど紛らわしい選択肢として優先）
+    const scored = pool.map(w => {
+        const compareBase = direction === 'e2j' ? w.en : w.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'');
+        return { w, score: similarityScore(cleanCorrectRaw, direction === 'e2j' ? w.en : w.jp) };
+    });
+    scored.sort((a,b) => b.score - a.score);
+
+    // 上位から2つ、残りはランダムから1つ（バリエーションを持たせる）
+    const topSimilar = scored.slice(0, 6).map(s => s.w);
+    shuffleArray(topSimilar);
+    const chosen = [];
+    const usedAnswers = new Set([correctAnswer]);
+    for (const w of topSimilar) {
+        if (chosen.length >= 2) break;
+        const ans = direction === 'e2j' ? w.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'') : w.en;
+        if (!usedAnswers.has(ans)) { chosen.push(w); usedAnswers.add(ans); }
+    }
+    const remaining = shuffleArray(pool.filter(w => !chosen.includes(w)));
+    for (const w of remaining) {
+        if (chosen.length >= 3) break;
+        const ans = direction === 'e2j' ? w.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'') : w.en;
+        if (!usedAnswers.has(ans)) { chosen.push(w); usedAnswers.add(ans); }
+    }
+
+    const choiceTexts = chosen.map(w => direction === 'e2j' ? w.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'') : w.en);
+    choiceTexts.push(correctAnswer);
+    return shuffleArray(choiceTexts);
+}
+
+// ========== SE（正解・不正解） ==========
+let _audioCtx = null;
+function getAudioCtx() { if(!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return _audioCtx; }
+function playCorrectSE() {
+    const ctx = getAudioCtx();
+    const osc1=ctx.createOscillator(), gain1=ctx.createGain();
+    osc1.connect(gain1); gain1.connect(ctx.destination);
+    osc1.type='sine'; osc1.frequency.setValueAtTime(880,ctx.currentTime);
+    gain1.gain.setValueAtTime(0.3,ctx.currentTime); gain1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.2);
+    osc1.start(ctx.currentTime); osc1.stop(ctx.currentTime+0.2);
+    const osc2=ctx.createOscillator(), gain2=ctx.createGain();
+    osc2.connect(gain2); gain2.connect(ctx.destination);
+    osc2.type='sine'; osc2.frequency.setValueAtTime(1320,ctx.currentTime+0.15);
+    gain2.gain.setValueAtTime(0.3,ctx.currentTime+0.15); gain2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.6);
+    osc2.start(ctx.currentTime+0.15); osc2.stop(ctx.currentTime+0.6);
+}
+function playWrongSE() {
+    const ctx = getAudioCtx();
+    [0,0.15].forEach(delay=>{
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type='square'; osc.frequency.setValueAtTime(90,ctx.currentTime+delay);
+        gain.gain.setValueAtTime(0.18,ctx.currentTime+delay);
+        gain.gain.setValueAtTime(0.18,ctx.currentTime+delay+0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+0.14);
+        osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+0.14);
+    });
+}
+// BGM（子供向けポップなメロディ＋コード伴奏）
+let bgmInterval=null, bgmGain=null, bgmStep=0;
+// メロディ（主旋律）
+const BGM_MELODY = [
+    784,880,988,880, 784,659,784,988,
+    1047,988,880,784, 880,784,659,587,
+    659,784,880,988, 1047,988,880,784,
+    880,784,659,523, 587,659,784,659
+];
+// 各拍で鳴らすコード（ルート＋3度＋5度の周波数、低め＝伴奏っぽく）
+const BGM_CHORDS = [
+    [392,494,587],[392,494,587],[440,523,659],[440,523,659],
+    [392,494,587],[349,440,523],[392,494,587],[392,494,587],
+    [523,659,784],[523,659,784],[440,523,659],[440,523,659],
+    [392,494,587],[349,440,523],[392,494,587],[392,494,587],
+    [392,494,587],[392,494,587],[440,523,659],[440,523,659],
+    [523,659,784],[523,659,784],[440,523,659],[440,523,659],
+    [392,494,587],[349,440,523],[329,415,494],[349,440,523],
+    [392,494,587],[349,440,523],[392,494,587],[392,494,587]
+];
+const BGM_NOTE_DUR = 300;
+function startBGM() {
+    const ctx = getAudioCtx();
+    stopBGM();
+    bgmGain = ctx.createGain(); bgmGain.connect(ctx.destination); bgmGain.gain.setValueAtTime(0.045,ctx.currentTime);
+    bgmStep = 0;
+    function playNote(){
+        if(!bgmGain) return;
+        const i = bgmStep % BGM_MELODY.length;
+        const freq = BGM_MELODY[i];
+        const dur = BGM_NOTE_DUR/1000;
+        // メロディ（主旋律・少し大きめ）
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(bgmGain);
+        o.type='triangle'; o.frequency.setValueAtTime(freq,ctx.currentTime);
+        g.gain.setValueAtTime(0.35,ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime + dur*0.85);
+        o.start(); o.stop(ctx.currentTime + dur*0.9);
+        // 伴奏コード（2拍に1回、控えめな音量で重ねる）
+        if (i % 2 === 0) {
+            BGM_CHORDS[i % BGM_CHORDS.length].forEach((cf, idx) => {
+                const co=ctx.createOscillator(), cg=ctx.createGain();
+                co.connect(cg); cg.connect(bgmGain);
+                co.type='sine'; co.frequency.setValueAtTime(cf,ctx.currentTime);
+                cg.gain.setValueAtTime(0.06,ctx.currentTime);
+                cg.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime + dur*1.7);
+                co.start(); co.stop(ctx.currentTime + dur*1.8);
+            });
+        }
+        bgmStep++;
+    }
+    playNote(); bgmInterval=setInterval(playNote, BGM_NOTE_DUR);
+}
+function stopBGM(){ if(bgmInterval){clearInterval(bgmInterval);bgmInterval=null;} if(bgmGain){bgmGain.gain.setValueAtTime(0, _audioCtx?_audioCtx.currentTime:0); bgmGain=null;} }
+
+// ========== ユーティリティ ==========
+function shuffleArray(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function switchTab(tab){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    const tabs=['practice','test','history'];
+    document.querySelectorAll('.tab-btn')[tabs.indexOf(tab)].classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+    if (tab === 'history') renderHistory();
+}
+
+// ========== 練習モード ==========
+let practiceQuestions=[], practiceIndex=0, practiceScore=0, practiceAnswered=false;
+let practiceDirection = 'j2e';
+let practiceMode = 'input'; // 'input' or 'choice'
+let practiceUserAnswer = ''; // 選択式で選んだ回答を一時保存
+
+function selectPracticeMode(mode, btn) {
+    practiceMode = mode;
+    document.querySelectorAll('#practice-mode-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function selectPracticeDirection(dir, btn) {
+    practiceDirection = dir;
+    document.querySelectorAll('#practice-direction-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function initPracticeButtons() {
+    const area = document.getElementById('practice-grade-buttons');
+    area.innerHTML = GRADES.map(g => `<button class="grade-btn" onclick="selectPracticeGrade(${g}, this)">${g}級</button>`).join('');
+}
+
+let lastPracticeGrade = null;
+function selectPracticeGrade(grade, btn) {
+    lastPracticeGrade = grade;
+    document.querySelectorAll('#practice-grade-buttons .grade-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    startPractice(grade);
+}
+
+function startPractice(grade) {
+    const words = GRADE_WORDS[grade];
+    const all = buildQuestionsForDirection(words, practiceDirection);
+    practiceQuestions = shuffleArray(all).slice(0, 10);
+    practiceIndex = 0; practiceScore = 0; practiceAnswered = false;
+    document.getElementById('practice-select-area').style.display='none';
+    document.getElementById('practice-quiz-area').style.display='block';
+    document.getElementById('practice-result-area').style.display='none';
+    startBGM();
+    showPracticeQuestion();
+}
+
+function showPracticeQuestion() {
+    practiceAnswered = false;
+    practiceUserAnswer = '';
+    const q = practiceQuestions[practiceIndex];
+    const dirBadge = document.getElementById('practice-direction');
+    if (q.direction === 'e2j') {
+        dirBadge.textContent = '英語 → 日本語';
+        document.getElementById('practice-question').textContent = q.en;
+    } else {
+        dirBadge.textContent = '日本語 → 英語';
+        document.getElementById('practice-question').textContent = q.jp;
+    }
+    document.getElementById('practice-feedback').className = 'feedback';
+    document.getElementById('practice-feedback').style.display = 'none';
+    document.getElementById('practice-check-btn').style.display = 'inline-block';
+    document.getElementById('practice-next-btn').style.display = 'none';
+    document.getElementById('practice-progress').textContent = `もんだい ${practiceIndex+1} / ${practiceQuestions.length}`;
+
+    if (practiceMode === 'choice') {
+        document.getElementById('practice-input-area').style.display = 'none';
+        document.getElementById('practice-choice-area').style.display = 'grid';
+        document.getElementById('practice-check-btn').style.display = 'none';
+        const choices = buildChoices(q, q.direction);
+        const area = document.getElementById('practice-choice-area');
+        area.innerHTML = choices.map(c => `<button class="choice-btn" onclick="practiceChoiceSelect(this, '${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+    } else {
+        document.getElementById('practice-input-area').style.display = 'block';
+        document.getElementById('practice-choice-area').style.display = 'none';
+        document.getElementById('practice-check-btn').style.display = 'inline-block';
+        document.getElementById('practice-input').value = '';
+        document.getElementById('practice-input').focus();
+    }
+}
+
+function practiceChoiceSelect(btn, value) {
+    if (practiceAnswered) return;
+    practiceUserAnswer = value;
+    document.querySelectorAll('#practice-choice-area .choice-btn').forEach(b => b.disabled = true);
+    practiceCheck();
+}
+
+function practiceCheck() {
+    if (practiceAnswered) return;
+    practiceAnswered = true;
+    const q = practiceQuestions[practiceIndex];
+    const correctDisplay = q.direction==='e2j' ? q.jp : q.en;
+    let isCorrectAns, userAnswer;
+
+    if (practiceMode === 'choice') {
+        userAnswer = practiceUserAnswer;
+        const correctClean = q.direction === 'e2j'
+            ? q.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'')
+            : q.en;
+        isCorrectAns = q.direction === 'e2j' ? (userAnswer === correctClean) : (userAnswer.toLowerCase() === q.en.toLowerCase());
+        // 選択ボタンの見た目を更新
+        document.querySelectorAll('#practice-choice-area .choice-btn').forEach(b => {
+            if (b.textContent === userAnswer) b.classList.add(isCorrectAns ? 'picked-correct' : 'picked-wrong');
+            if (!isCorrectAns && b.textContent === correctClean) b.classList.add('picked-correct');
+        });
+    } else {
+        const userAnswerRaw = document.getElementById('practice-input').value.trim();
+        isCorrectAns = q.direction === 'e2j' ? isJpCorrect(userAnswerRaw, q) : userAnswerRaw.toLowerCase() === q.en.toLowerCase();
+        userAnswer = userAnswerRaw;
+    }
+
+    const fb = document.getElementById('practice-feedback');
+    if (isCorrectAns) {
+        practiceScore++;
+        fb.innerHTML = '⭐ せいかい！ <span class="english-answer">' + correctDisplay + '</span>';
+        fb.className = 'feedback correct'; fb.style.display='';
+        playCorrectSE();
+    } else {
+        fb.innerHTML = '😢 ざんねん…<br><span style="color:#999;font-size:0.7em;">あなた: ' + (userAnswer || '（くうらん）') + '</span><br><span style="font-size:1.2em;">こたえ: <span class="english-answer">' + correctDisplay + '</span></span>';
+        fb.className = 'feedback incorrect'; fb.style.display='';
+        playWrongSE();
+    }
+    document.getElementById('practice-check-btn').style.display = 'none';
+    document.getElementById('practice-next-btn').style.display = 'inline-block';
+}
+
+function practiceNext() {
+    practiceIndex++;
+    if (practiceIndex >= practiceQuestions.length) { showPracticeResult(); }
+    else { showPracticeQuestion(); }
+}
+
+function showPracticeResult() {
+    stopBGM();
+    document.getElementById('practice-quiz-area').style.display = 'none';
+    document.getElementById('practice-result-area').style.display = 'block';
+    const total = practiceQuestions.length;
+    document.getElementById('practice-result-score').textContent = `${practiceScore} / ${total}`;
+    const ratio = practiceScore / total;
+    let stars='', msg='';
+    if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    else if (ratio >= 0.7) { stars='⭐⭐'; msg='よくできたね！'; }
+    else if (ratio >= 0.5) { stars='⭐'; msg='がんばったね！'; }
+    else { stars='💪'; msg='もういちど やってみよう！'; }
+    document.getElementById('practice-result-stars').textContent = stars;
+    document.getElementById('practice-result-message').textContent = msg;
+    if (practiceScore === total) playFanfareSE();
+    const dirLabel = practiceDirection === 'j2e' ? '日→英' : practiceDirection === 'e2j' ? '英→日' : '両方';
+    const modeLabel = practiceMode === 'choice' ? '選択式' : '入力式';
+    saveHistory('れんしゅう', `${lastPracticeGrade}級 ${dirLabel} ${modeLabel}`, practiceScore, total);
+}
+
+function backToPracticeSelect() {
+    document.getElementById('practice-result-area').style.display = 'none';
+    document.getElementById('practice-quiz-area').style.display = 'none';
+    document.getElementById('practice-select-area').style.display = 'block';
+    document.querySelectorAll('#practice-grade-buttons .grade-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+function quitPractice() {
+    stopBGM();
+    backToPracticeSelect();
+}
+
+// ========== テストモード ==========
+let selectedTestGrades = new Set();
+let testQuestions=[], testIndex=0, testScore=0, testAnswered=false, testResults=[];
+let testDirection = 'j2e';
+let testMode = 'input';
+let testUserAnswer = '';
+
+function selectTestMode(mode, btn) {
+    testMode = mode;
+    document.querySelectorAll('#test-mode-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function selectTestDirection(dir, btn) {
+    testDirection = dir;
+    document.querySelectorAll('#test-direction-buttons .dir-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function initTestButtons() {
+    const area = document.getElementById('test-grade-buttons');
+    area.innerHTML = GRADES.map(g => `<button class="grade-btn" onclick="toggleTestGrade(${g}, this)">${g}級</button>`).join('');
+}
+
+function toggleTestGrade(grade, btn) {
+    if (selectedTestGrades.has(grade)) {
+        selectedTestGrades.delete(grade);
+        btn.classList.remove('selected');
+    } else {
+        selectedTestGrades.add(grade);
+        btn.classList.add('selected');
+    }
+}
+
+function startTest() {
+    if (selectedTestGrades.size === 0) { alert('しゅつだいはんいを 1つ いじょう えらんでね！'); return; }
+    // 選んだ級の単語を全部集めて、方向設定に応じて問題を作る
+    let all = [];
+    selectedTestGrades.forEach(g => {
+        all = all.concat(buildQuestionsForDirection(GRADE_WORDS[g], testDirection));
+    });
+    testQuestions = shuffleArray(all).slice(0, 10);
+    testIndex = 0; testScore = 0; testAnswered = false; testResults = [];
+    document.getElementById('test-select-area').style.display = 'none';
+    document.getElementById('test-quiz-area').style.display = 'block';
+    document.getElementById('test-result-area').style.display = 'none';
+    startBGM();
+    showTestQuestion();
+}
+
+function showTestQuestion() {
+    testAnswered = false;
+    testUserAnswer = '';
+    const q = testQuestions[testIndex];
+    const dirBadge = document.getElementById('test-direction');
+    if (q.direction === 'e2j') {
+        dirBadge.textContent = '英語 → 日本語';
+        document.getElementById('test-question').textContent = q.en;
+    } else {
+        dirBadge.textContent = '日本語 → 英語';
+        document.getElementById('test-question').textContent = q.jp;
+    }
+    document.getElementById('test-feedback').className = 'feedback';
+    document.getElementById('test-feedback').style.display = 'none';
+    document.getElementById('test-check-btn').style.display = 'inline-block';
+    document.getElementById('test-next-btn').style.display = 'none';
+    const total = testQuestions.length;
+    document.getElementById('test-progress-text').textContent = `もんだい ${testIndex+1} / ${total}`;
+    document.getElementById('test-progress-fill').style.width = `${(testIndex/total)*100}%`;
+
+    if (testMode === 'choice') {
+        document.getElementById('test-input-area').style.display = 'none';
+        document.getElementById('test-choice-area').style.display = 'grid';
+        document.getElementById('test-check-btn').style.display = 'none';
+        const choices = buildChoices(q, q.direction);
+        const area = document.getElementById('test-choice-area');
+        area.innerHTML = choices.map(c => `<button class="choice-btn" onclick="testChoiceSelect(this, '${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+    } else {
+        document.getElementById('test-input-area').style.display = 'block';
+        document.getElementById('test-choice-area').style.display = 'none';
+        document.getElementById('test-check-btn').style.display = 'inline-block';
+        document.getElementById('test-input').value = '';
+        document.getElementById('test-input').focus();
+    }
+}
+
+function testChoiceSelect(btn, value) {
+    if (testAnswered) return;
+    testUserAnswer = value;
+    document.querySelectorAll('#test-choice-area .choice-btn').forEach(b => b.disabled = true);
+    testCheck();
+}
+
+function testCheck() {
+    if (testAnswered) return;
+    testAnswered = true;
+    const q = testQuestions[testIndex];
+    const displayAnswer = q.direction === 'e2j' ? q.jp : q.en;
+    let isCorrect, userAnswer;
+
+    if (testMode === 'choice') {
+        userAnswer = testUserAnswer;
+        const correctClean = q.direction === 'e2j'
+            ? q.jp.replace(/[（(][^）)]*[）)]/g,'').replace(/[〜～]/g,'')
+            : q.en;
+        isCorrect = q.direction === 'e2j' ? (userAnswer === correctClean) : (userAnswer.toLowerCase() === q.en.toLowerCase());
+        document.querySelectorAll('#test-choice-area .choice-btn').forEach(b => {
+            if (b.textContent === userAnswer) b.classList.add(isCorrect ? 'picked-correct' : 'picked-wrong');
+            if (!isCorrect && b.textContent === correctClean) b.classList.add('picked-correct');
+        });
+    } else {
+        const userAnswerRaw = document.getElementById('test-input').value.trim();
+        isCorrect = q.direction === 'e2j' ? isJpCorrect(userAnswerRaw, q) : userAnswerRaw.toLowerCase() === q.en.toLowerCase();
+        userAnswer = userAnswerRaw;
+    }
+
+    const fb = document.getElementById('test-feedback');
+    if (isCorrect) {
+        testScore++;
+        fb.innerHTML = '⭐ せいかい！ <span class="english-answer">' + displayAnswer + '</span>';
+        fb.className = 'feedback correct'; fb.style.display='';
+        playCorrectSE();
+    } else {
+        fb.innerHTML = '😢 ざんねん…<br><span style="color:#999;font-size:0.7em;">あなた: ' + (userAnswer || '（くうらん）') + '</span><br><span style="font-size:1.2em;">こたえ: <span class="english-answer">' + displayAnswer + '</span></span>';
+        fb.className = 'feedback incorrect'; fb.style.display='';
+        playWrongSE();
+    }
+    testResults.push({ q, answer: userAnswer, correct: isCorrect, displayAnswer, question: q.direction==='e2j'?q.en:q.jp });
+    document.getElementById('test-check-btn').style.display = 'none';
+    document.getElementById('test-next-btn').style.display = 'inline-block';
+}
+
+function testNext() {
+    testIndex++;
+    if (testIndex >= testQuestions.length) { showTestResult(); }
+    else { showTestQuestion(); }
+}
+
+function showTestResult() {
+    stopBGM();
+    document.getElementById('test-quiz-area').style.display = 'none';
+    document.getElementById('test-result-area').style.display = 'block';
+    const total = testQuestions.length;
+    const points = Math.round((testScore/total)*100);
+    document.getElementById('test-result-score').textContent = `${points}てん`;
+    const ratio = testScore/total;
+    let stars='', msg='';
+    if (ratio >= 0.9) { stars='⭐⭐⭐'; msg='すごい！かんぺき！'; }
+    else if (ratio >= 0.7) { stars='⭐⭐'; msg='よくできたね！'; }
+    else if (ratio >= 0.5) { stars='⭐'; msg='がんばったね！'; }
+    else { stars='💪'; msg='もういちど やってみよう！'; }
+    document.getElementById('test-result-stars').textContent = stars;
+    document.getElementById('test-result-message').textContent = msg;
+    let reviewHtml = '<h3 style="margin-bottom:10px;">ふりかえり</h3>';
+    testResults.forEach(r => {
+        const cls = r.correct ? 'review-correct' : 'review-incorrect';
+        const icon = r.correct ? '✅' : '❌';
+        reviewHtml += `<div class="review-item ${cls}">${icon} ${r.question} → ${r.displayAnswer}（あなた: ${r.answer || '（くうらん）'}）</div>`;
+    });
+    document.getElementById('test-review').innerHTML = reviewHtml;
+    if (testScore === total) playFanfareSE();
+    const dirLabel = testDirection === 'j2e' ? '日→英' : testDirection === 'e2j' ? '英→日' : '両方';
+    const modeLabel = testMode === 'choice' ? '選択式' : '入力式';
+    const gradesLabel = Array.from(selectedTestGrades).sort((a,b)=>b-a).map(g=>g+'級').join(',');
+    saveHistory('テスト', `${gradesLabel} ${dirLabel} ${modeLabel}`, testScore, total);
+}
+
+function backToTestSelect() {
+    document.getElementById('test-result-area').style.display = 'none';
+    document.getElementById('test-quiz-area').style.display = 'none';
+    document.getElementById('test-select-area').style.display = 'block';
+}
+
+function quitTest() {
+    stopBGM();
+    backToTestSelect();
+}
+
+// ========== キーボード操作 ==========
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) return;
+    if (activeTab.id === 'tab-practice') {
+        if (document.getElementById('practice-quiz-area').style.display === 'block') {
+            if (!practiceAnswered) practiceCheck();
+            else practiceNext();
+        }
+    } else if (activeTab.id === 'tab-test') {
+        if (document.getElementById('test-quiz-area').style.display === 'block') {
+            if (!testAnswered) testCheck();
+            else testNext();
+        }
+    }
+});
+
+// ========== 背景のポップなアルファベット ==========
+function initLetterBackground() {
+    const container = document.getElementById('letter-bg');
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+    const colors = ['#FFD54F','#FF8A65','#4FC3F7','#81C784','#F06292','#BA68C8','#FFF176','#4DD0E1'];
+    const count = 22;
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-letter';
+        el.textContent = letters[Math.floor(Math.random() * letters.length)];
+        const size = 2 + Math.random() * 3.5;
+        const rot = (Math.random() * 60 - 30);
+        el.style.left = Math.random() * 96 + 'vw';
+        el.style.top = Math.random() * 96 + 'vh';
+        el.style.fontSize = size + 'em';
+        el.style.color = colors[Math.floor(Math.random() * colors.length)];
+        el.style.opacity = 0.35 + Math.random() * 0.35;
+        el.style.setProperty('--rot', rot + 'deg');
+        const dur1 = 4 + Math.random() * 4;
+        const dur2 = 5 + Math.random() * 4;
+        el.style.animationDuration = dur1 + 's, ' + dur2 + 's';
+        el.style.animationDelay = (Math.random() * -8) + 's, ' + (Math.random() * -8) + 's';
+        container.appendChild(el);
+    }
+}
+
+// ========== 名前選択・スコア履歴管理 ==========
+let currentUser = null;
+const HISTORY_KEY_PREFIX = 'eiwa_history_';
+
+function confirmNameSelect() {
+    const val = document.getElementById('name-select-dropdown').value;
+    if (!val) { alert('なまえを えらんでね！'); return; }
+    currentUser = val;
+    document.getElementById('name-select-overlay').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    renderUserBadge();
+}
+
+function renderUserBadge() {
+    document.getElementById('user-badge').innerHTML =
+        `👤 ${currentUser} さん <button class="switch-user-btn" onclick="switchUser()">なまえを かえる</button>`;
+}
+
+function switchUser() {
+    // 進行中のクイズがあれば停止
+    stopBGM();
+    currentUser = null;
+    document.getElementById('name-select-dropdown').value = '';
+    document.getElementById('main-app').style.display = 'none';
+    document.getElementById('name-select-overlay').style.display = 'flex';
+    // 各画面を選択状態に戻す
+    backToPracticeSelect();
+    backToTestSelect();
+    switchTab('practice');
+}
+
+function saveHistory(mode, detail, score, total) {
+    if (!currentUser) return;
+    const key = HISTORY_KEY_PREFIX + currentUser;
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    list.push({
+        date: new Date().toLocaleString('ja-JP', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}),
+        mode, detail, score, total
+    });
+    // 直近50件まで保持
+    while (list.length > 50) list.shift();
+    localStorage.setItem(key, JSON.stringify(list));
+}
+
+function renderHistory() {
+    if (!currentUser) return;
+    document.getElementById('history-username-label').textContent = currentUser;
+    const key = HISTORY_KEY_PREFIX + currentUser;
+    const list = JSON.parse(localStorage.getItem(key) || '[]').slice(-20).reverse();
+    const area = document.getElementById('history-list');
+    if (list.length === 0) {
+        area.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">きろくが まだ ないよ！れんしゅう・テストを やってみよう</p>';
+        return;
+    }
+    area.innerHTML = list.map(item => {
+        const ratio = item.score / item.total;
+        const icon = ratio === 1 ? '🏆' : ratio >= 0.7 ? '⭐' : '📝';
+        return `<div class="history-item"><span>${icon} ${item.date} [${item.mode}] ${item.detail}</span><span><b>${item.score}/${item.total}</b></span></div>`;
+    }).join('');
+}
+
+// ========== 起動 ==========
+initPracticeButtons();
+initTestButtons();
+initLetterBackground();
+</script>
+</body>
+</html>
