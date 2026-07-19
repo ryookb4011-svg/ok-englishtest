@@ -62,17 +62,13 @@
 <body>
 <div id="letter-bg"></div>
 
-<!-- 名前選択オーバーレイ -->
+<!-- 名前入力オーバーレイ -->
 <div id="name-select-overlay">
+    <div id="name-letter-bg"></div>
     <div class="name-select-box">
-        <h2>👋 なまえを えらんでね！</h2>
-        <select id="name-select-dropdown">
-            <option value="">-- なまえを えらぶ --</option>
-            <option value="あおい">あおい</option>
-            <option value="はるか">はるか</option>
-            <option value="ゆう">ゆう</option>
-            <option value="テスト用">テスト用</option>
-        </select>
+        <h2>👋 ニックネームを にゅうりょくしてね！</h2>
+        <p style="color:#888; font-size:0.85em; margin-bottom:12px;">きろくは この ブラウザだけに ほぞんされます</p>
+        <input type="text" id="name-select-dropdown" placeholder="例: たろう" maxlength="12" autocomplete="off">
         <button class="btn btn-primary" onclick="confirmNameSelect()" style="margin-top:15px;">はじめる！</button>
     </div>
 </div>
@@ -189,7 +185,13 @@
         position: fixed; top:0; left:0; right:0; bottom:0; z-index: 1000;
         background: linear-gradient(135deg, #4fc3f7 0%, #7e57c2 50%, #ff8a65 100%);
         display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
     }
+    #name-letter-bg {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 0; overflow: hidden; pointer-events: none;
+    }
+    .name-select-box { position: relative; z-index: 1; }
     .name-select-box {
         background: rgba(255,255,255,0.95); border-radius: 24px; padding: 40px 45px;
         text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); max-width: 90%;
@@ -197,8 +199,10 @@
     .name-select-box h2 { color: #5a3d8a; margin-bottom: 20px; font-size: 1.5em; }
     #name-select-dropdown {
         font-size: 1.3em; padding: 12px 20px; border-radius: 12px; border: 3px solid #b39ddb;
-        font-family: 'Meiryo', sans-serif; color: #333; background: #fff; cursor: pointer;
+        font-family: 'Meiryo', sans-serif; color: #333; background: #fff;
+        text-align: center; outline: none; width: 220px;
     }
+    #name-select-dropdown:focus { border-color: #7c4dff; }
     #user-badge {
         display: flex; align-items: center; justify-content: center; gap: 10px;
         color: #fff; font-size: 1.05em; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
@@ -968,29 +972,39 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ========== 背景のポップなアルファベット ==========
-function initLetterBackground() {
-    const container = document.getElementById('letter-bg');
+function populateLetterBackground(containerId, count, opts) {
+    opts = opts || {};
+    const container = document.getElementById(containerId);
+    if (!container) return;
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
-    const colors = ['#FFD54F','#FF8A65','#4FC3F7','#81C784','#F06292','#BA68C8','#FFF176','#4DD0E1'];
-    const count = 22;
+    const colors = ['#FFD54F','#FF8A65','#4FC3F7','#81C784','#F06292','#BA68C8','#FFF176','#4DD0E1','#FF7043','#EC407A'];
+    const minOpacity = opts.minOpacity ?? 0.35;
+    const opacityRange = opts.opacityRange ?? 0.35;
+    const minSize = opts.minSize ?? 2;
+    const sizeRange = opts.sizeRange ?? 3.5;
     for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
         el.className = 'floating-letter';
         el.textContent = letters[Math.floor(Math.random() * letters.length)];
-        const size = 2 + Math.random() * 3.5;
+        const size = minSize + Math.random() * sizeRange;
         const rot = (Math.random() * 60 - 30);
         el.style.left = Math.random() * 96 + 'vw';
         el.style.top = Math.random() * 96 + 'vh';
         el.style.fontSize = size + 'em';
         el.style.color = colors[Math.floor(Math.random() * colors.length)];
-        el.style.opacity = 0.35 + Math.random() * 0.35;
+        el.style.opacity = minOpacity + Math.random() * opacityRange;
         el.style.setProperty('--rot', rot + 'deg');
-        const dur1 = 4 + Math.random() * 4;
-        const dur2 = 5 + Math.random() * 4;
+        const dur1 = 3 + Math.random() * 3.5;
+        const dur2 = 4 + Math.random() * 3.5;
         el.style.animationDuration = dur1 + 's, ' + dur2 + 's';
         el.style.animationDelay = (Math.random() * -8) + 's, ' + (Math.random() * -8) + 's';
         container.appendChild(el);
     }
+}
+function initLetterBackground() {
+    populateLetterBackground('letter-bg', 22);
+    // 名前入力画面はもっとポップに（数多め・くっきり）
+    populateLetterBackground('name-letter-bg', 32, { minOpacity: 0.5, opacityRange: 0.4, minSize: 2.2, sizeRange: 4 });
 }
 
 // ========== 名前選択・スコア履歴管理 ==========
@@ -998,13 +1012,19 @@ let currentUser = null;
 const HISTORY_KEY_PREFIX = 'eiwa_history_';
 
 function confirmNameSelect() {
-    const val = document.getElementById('name-select-dropdown').value;
-    if (!val) { alert('なまえを えらんでね！'); return; }
+    const val = document.getElementById('name-select-dropdown').value.trim();
+    if (!val) { alert('ニックネームを にゅうりょくしてね！'); return; }
     currentUser = val;
     document.getElementById('name-select-overlay').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     renderUserBadge();
 }
+document.addEventListener('DOMContentLoaded', () => {
+    const nameInput = document.getElementById('name-select-dropdown');
+    if (nameInput) {
+        nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmNameSelect(); });
+    }
+});
 
 function renderUserBadge() {
     document.getElementById('user-badge').innerHTML =
