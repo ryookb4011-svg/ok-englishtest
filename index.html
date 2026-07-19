@@ -1158,20 +1158,13 @@ function initLetterBackground() {
 }
 
 // ========== なまえ＋4けたパスでの きろく管理 ==========
-// アカウント一覧: { "なまえ": "パスハッシュ" } を1つのキーにまとめて保存
+// 「なまえ＋4けた」の組み合わせをそのままIDとして使う（重複チェックなし）
 let currentUser = null;
-const ACCOUNTS_KEY = 'eiwa_accounts';
+let currentUserDisplayName = null; // 表示用（なまえ部分だけ）
 const HISTORY_KEY_PREFIX = 'eiwa_history_';
 
 // 4桁の数字のみを許可
 function isValidPass(pass) { return /^\d{4}$/.test(pass); }
-
-function getAccounts() {
-    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}');
-}
-function saveAccounts(accounts) {
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-}
 
 function loginUser() {
     const name = document.getElementById('login-name-input').value.trim();
@@ -1179,24 +1172,15 @@ function loginUser() {
     if (!name) { alert('なまえを にゅうりょくしてね！'); return; }
     if (!isValidPass(pass)) { alert('パスワードは 4けたの すうじで にゅうりょくしてね！'); return; }
 
-    const accounts = getAccounts();
-    if (accounts[name] !== undefined) {
-        // 既存の名前 → パスが一致するかチェック
-        if (accounts[name] !== pass) {
-            alert('その なまえは すでに つかわれています。ちがう なまえか、もしくは とうろくした ときの パスワードを にゅうりょくしてね！');
-            return;
-        }
-    } else {
-        // 新規登録
-        accounts[name] = pass;
-        saveAccounts(accounts);
-    }
-    currentUser = name;
+    // なまえ＋パスの組み合わせをIDとして使用（同じ組み合わせなら常に同じ記録に紐づく）
+    currentUser = `${name}#${pass}`;
+    currentUserDisplayName = name;
     renderLoginStatus();
 }
 
 function logoutUser() {
     currentUser = null;
+    currentUserDisplayName = null;
     document.getElementById('login-name-input').value = '';
     document.getElementById('login-pass-input').value = '';
     renderLoginStatus();
@@ -1206,7 +1190,7 @@ function renderLoginStatus() {
     if (currentUser) {
         document.getElementById('login-form-area').style.display = 'none';
         document.getElementById('login-status-area').style.display = 'flex';
-        document.getElementById('login-status-text').textContent = `👤 ${currentUser} さん（きろくちゅう）`;
+        document.getElementById('login-status-text').textContent = `👤 ${currentUserDisplayName} さん（きろくちゅう）`;
         document.getElementById('login-hint').style.display = 'none';
     } else {
         document.getElementById('login-form-area').style.display = 'flex';
@@ -1244,7 +1228,7 @@ function renderHistory() {
         area.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">なまえと パスワードを にゅうりょくすると きろくが つくよ！</p>';
         return;
     }
-    label.textContent = currentUser;
+    label.textContent = currentUserDisplayName;
     const key = HISTORY_KEY_PREFIX + currentUser;
     const list = JSON.parse(localStorage.getItem(key) || '[]').slice(-20).reverse();
     if (list.length === 0) {
