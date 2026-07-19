@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="DL3EfTC3T2_RxjlsGtnDM5AYmK1d8Z9Nm3Lka0LG0Zg">
     <title>英検 級別 英単語 無料練習・テスト | えいごたんご れんしゅう（小学生向け）</title>
-    <meta name="description" content="小学生向けの無料英単語学習サイト。英検10級〜1級レベルの単語を級ごとに練習・テストできます。入力式と選択式の2モード対応、間違えた単語は自動でやりなおし。ミニゲームのご褒美つきで楽しく続けられます。">
-    <meta name="keywords" content="英検,級別,英単語,無料,練習,テスト,小学生,子供,英語学習,アプリ,英検10級,英検9級,英検8級,英検7級,英検6級,英検5級">
+    <meta name="description" content="小学生向けの無料英単語学習サイト。英検10級〜1級の基本コースと、チャンピオンコースA〜C級の単語を級ごとに練習・テストできます。入力式と選択式の2モード対応、間違えた単語は自動でやりなおし。ミニゲームのご褒美つきで楽しく続けられます。">
+    <meta name="keywords" content="英検,級別,英単語,無料,練習,テスト,小学生,子供,英語学習,アプリ,英検10級,英検9級,英検8級,英検7級,英検6級,英検5級,チャンピオンコース">
     <meta property="og:title" content="英検 級別 英単語 無料練習・テスト | えいごたんご れんしゅう">
     <meta property="og:description" content="英検10級〜1級レベルの単語を級ごとに無料で練習・テストできる小学生向けサイト。">
     <meta property="og:type" content="website">
@@ -245,7 +245,8 @@
         <p style="margin-bottom:10px;">練習モードでは、間違えた単語を自動でもう一度出題する「やりなおし」機能があり、単語の定着をサポートします。テストモードでは複数の級をまとめて選んで、実力チェックとして使うこともできます。</p>
         <p style="margin-bottom:10px;">テストを2回終えるごとに、テトリスやブロックくずしのミニゲームがご褒美として登場します（設定からON/OFF切り替え可能）。がんばった後の息抜きとして、楽しく続けられる工夫をしています。</p>
         <h3 style="color:#5a3d8a; font-size:1.05em; margin:15px 0 8px;">対応している級</h3>
-        <p style="margin-bottom:10px;">10級（I, you, name など基本単語）、9級（pen, ball, desk など身近なもの）、8級（am, is, are などbe動詞）、7級（he, she, we など代名詞）、6級（tea, book, house など生活単語）、5級（boy, girl, friend など）、4級（数字 one〜ten）、3級（family, school など）、2級（eat, drink, スポーツ）、1級（English, like, play などの動詞）に対応しています。</p>
+        <p style="margin-bottom:10px;">基本コースは10級（I, you, name など基本単語）、9級（pen, ball, desk など身近なもの）、8級（am, is, are などbe動詞）、7級（he, she, we など代名詞）、6級（tea, book, house など生活単語）、5級（boy, girl, friend など）、4級（数字 one〜ten）、3級（family, school など）、2級（eat, drink, スポーツ）、1級（English, like, play などの動詞）に対応しています。</p>
+        <p style="margin-bottom:10px;">さらにレベルの高い「チャンピオンコース」も用意しています。C級（map, food, happy など）、B級（曜日, kind, cool, swim など）、A級（体の部位, 月の名前, 11〜20の数字, doctor, season など）と、基本コースを終えた人向けの単語も練習・テストできます。</p>
         <p>ニックネームと4けたのパスワードを入れると、学習の記録（きろく）が保存されます。入力しなくても、そのまま無料で練習・テストを楽しめます。</p>
     </div>
 
@@ -358,7 +359,9 @@
     .choice-btn.picked-wrong { background: #ffcdd2; border-color: #f44336; color: #c62828; }
     .choice-btn:disabled { cursor: default; opacity: 0.85; }
     @media (max-width: 500px) { .choice-area { grid-template-columns: 1fr; } }
-    .grade-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
+    .grade-buttons { margin-bottom: 10px; }
+    .grade-group-label { color: #7c4dff; font-weight: bold; font-size: 0.95em; margin: 10px 0 8px; text-align: center; }
+    .grade-group { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 8px; }
     .grade-btn {
         padding: 14px 20px; border: 3px solid #b39ddb; border-radius: 14px;
         background: #f8f4ff; color: #5a3d8a; font-size: 1.1em; font-weight: bold;
@@ -367,6 +370,9 @@
     }
     .grade-btn:hover { background: #ede7f6; transform: translateY(-2px); }
     .grade-btn.selected { background: #7c4dff; color: #fff; border-color: #7c4dff; }
+    .grade-btn.champion-btn { border-color: #FFB300; background: #FFF8E1; color: #8a6100; }
+    .grade-btn.champion-btn:hover { background: #FFECB3; }
+    .grade-btn.champion-btn.selected { background: #FFA000; color: #fff; border-color: #FFA000; }
 
     .direction-badge {
         display: inline-block; padding: 6px 16px; border-radius: 20px;
@@ -539,6 +545,49 @@ function playFanfareSE() {
     });
 }
 
+// ========== チャンピオンコース（A〜C級）の単語データ ==========
+const CHAMPION_WORDS = {
+    C: [
+        {en:"map", jp:"地図", kana:"ちず"}, {en:"doll", jp:"人形", kana:"にんぎょう"}, {en:"game", jp:"ゲーム・試合", kana:"げーむ・しあい"},
+        {en:"class", jp:"クラス・授業", kana:"くらす・じゅぎょう"}, {en:"town", jp:"町", kana:"まち"}, {en:"food", jp:"食べ物", kana:"たべもの"},
+        {en:"rice", jp:"米・ごはん", kana:"こめ・ごはん"}, {en:"water", jp:"水", kana:"みず"}, {en:"new", jp:"新しい", kana:"あたらしい"},
+        {en:"old", jp:"古い", kana:"ふるい"}, {en:"fine", jp:"元気な", kana:"げんきな"}, {en:"happy", jp:"幸せな", kana:"しあわせな"},
+        {en:"mine", jp:"私のもの", kana:"わたしのもの"}, {en:"yours", jp:"あなたたちのもの"}, {en:"the", jp:"その"},
+        {en:"very", jp:"とても"}, {en:"now", jp:"今", kana:"いま"}, {en:"today", jp:"今日", kana:"きょう"},
+        {en:"from", jp:"〜出身", kana:"〜しゅっしん"}, {en:"how", jp:"どんなぐあい"}
+    ],
+    B: [
+        {en:"Japan", jp:"日本", kana:"にほん"}, {en:"America", jp:"アメリカ"}, {en:"China", jp:"中国", kana:"ちゅうごく"},
+        {en:"Sunday", jp:"日曜日", kana:"にちようび"}, {en:"Monday", jp:"月曜日", kana:"げつようび"}, {en:"Tuesday", jp:"火曜日", kana:"かようび"},
+        {en:"Wednesday", jp:"水曜日", kana:"すいようび"}, {en:"Thursday", jp:"木曜日", kana:"もくようび"}, {en:"Friday", jp:"金曜日", kana:"きんようび"},
+        {en:"Saturday", jp:"土曜日", kana:"どようび"}, {en:"kind", jp:"親切な", kana:"しんせつな"}, {en:"cool", jp:"かっこいい"},
+        {en:"hot", jp:"あつい"}, {en:"small", jp:"小さい", kana:"ちいさい"}, {en:"big", jp:"大きい", kana:"おおきい"},
+        {en:"cook", jp:"料理する", kana:"りょうりする"}, {en:"help", jp:"手伝う", kana:"てつだう"}, {en:"make", jp:"つくる"},
+        {en:"meet", jp:"会う", kana:"あう"}, {en:"use", jp:"使う", kana:"つかう"}, {en:"know", jp:"知っている", kana:"しっている"},
+        {en:"swim", jp:"泳ぐ", kana:"およぐ"}, {en:"walk", jp:"歩く", kana:"あるく"}, {en:"want", jp:"欲しい", kana:"ほしい"},
+        {en:"sing", jp:"歌う", kana:"うたう"}, {en:"work", jp:"働く・仕事", kana:"はたらく・しごと"}, {en:"write", jp:"書く", kana:"かく"},
+        {en:"watch", jp:"テレビなどを見る", kana:"てれびなどをみる"}, {en:"study", jp:"勉強する", kana:"べんきょうする"}, {en:"enjoy", jp:"楽しむ", kana:"たのしむ"}
+    ],
+    A: [
+        {en:"eye", jp:"目", kana:"め"}, {en:"ear", jp:"耳", kana:"みみ"}, {en:"nose", jp:"鼻", kana:"はな"},
+        {en:"mouth", jp:"口", kana:"くち"}, {en:"hand", jp:"手", kana:"て"}, {en:"animal", jp:"動物", kana:"どうぶつ"},
+        {en:"rabbit", jp:"ウサギ", kana:"うさぎ"}, {en:"morning", jp:"朝", kana:"あさ"}, {en:"breakfast", jp:"朝食", kana:"ちょうしょく"},
+        {en:"lunch", jp:"昼食", kana:"ちゅうしょく"}, {en:"dinner", jp:"夕食", kana:"ゆうしょく"}, {en:"picture", jp:"写真", kana:"しゃしん"},
+        {en:"computer", jp:"コンピュータ"}, {en:"Japanese", jp:"日本語", kana:"にほんご"}, {en:"eleven", jp:"11"},
+        {en:"twelve", jp:"12"}, {en:"thirteen", jp:"13"}, {en:"fourteen", jp:"14"}, {en:"fifteen", jp:"15"},
+        {en:"sixteen", jp:"16"}, {en:"seventeen", jp:"17"}, {en:"eighteen", jp:"18"}, {en:"nineteen", jp:"19"},
+        {en:"twenty", jp:"20"}, {en:"January", jp:"1月", kana:"いちがつ"}, {en:"February", jp:"2月", kana:"にがつ"},
+        {en:"March", jp:"3月", kana:"さんがつ"}, {en:"April", jp:"4月", kana:"しがつ"}, {en:"May", jp:"5月", kana:"ごがつ"},
+        {en:"June", jp:"6月", kana:"ろくがつ"}, {en:"July", jp:"7月", kana:"しちがつ"}, {en:"August", jp:"8月", kana:"はちがつ"},
+        {en:"September", jp:"9月", kana:"くがつ"}, {en:"October", jp:"10月", kana:"じゅうがつ"}, {en:"November", jp:"11月", kana:"じゅういちがつ"},
+        {en:"December", jp:"12月", kana:"じゅうにがつ"}, {en:"doctor", jp:"医者", kana:"いしゃ"}, {en:"nurse", jp:"看護師", kana:"かんごし"},
+        {en:"listen", jp:"聞く", kana:"きく"}, {en:"teach", jp:"教える", kana:"おしえる"}, {en:"thank", jp:"感謝する", kana:"かんしゃする"},
+        {en:"open", jp:"あける"}, {en:"close", jp:"しめる"}, {en:"clean", jp:"きれいにする"}, {en:"need", jp:"〜が必要だ", kana:"〜がひつようだ"},
+        {en:"season", jp:"季節", kana:"きせつ"}, {en:"spring", jp:"春", kana:"はる"}, {en:"summer", jp:"夏", kana:"なつ"},
+        {en:"fall", jp:"秋", kana:"あき"}, {en:"winter", jp:"冬", kana:"ふゆ"}
+    ]
+};
+
 // ========== 方向に応じた問題生成 ==========
 function buildQuestionsForDirection(words, direction) {
     const all = [];
@@ -549,12 +598,12 @@ function buildQuestionsForDirection(words, direction) {
     return all;
 }
 const GRADES = [10,9,8,7,6,5,4,3,2,1];
-// 「級」グループ。将来「段」を追加する場合は DAN_WORDS を定義し、
-// GROUPS に { key:'dan', words: DAN_WORDS, levels: [...] } を追加すればよい。
+const CHAMPION_LEVELS = ['C','B','A']; // C→B→Aの順（Aがいちばん難しい）
+// 「きほん（1〜10級）」グループと「チャンピオン（A〜C級）」グループ。
 // 紛らわしい選択肢は同じグループ内の単語からのみ生成される。
 const GROUPS = [
-    { key: 'kyu', words: GRADE_WORDS, levels: GRADES }
-    // 今後: { key: 'dan', words: DAN_WORDS, levels: [1,2,3,...] }
+    { key: 'kyu', words: GRADE_WORDS, levels: GRADES },
+    { key: 'champion', words: CHAMPION_WORDS, levels: CHAMPION_LEVELS }
 ];
 
 // 単語エントリがどのグループに属するかを調べる（紛らわしい選択肢のプール選定に使用）
@@ -578,6 +627,19 @@ function findGroupPoolForEntry(entry) {
 // 全単語をフラット化（互換用：級グループ全体）
 const ALL_WORDS_FLAT = [];
 GRADES.forEach(g => GRADE_WORDS[g].forEach(w => ALL_WORDS_FLAT.push(w)));
+
+// レベルキー（10級〜1級の数字、またはC/B/Aのチャンピオン級）から単語リストを取得
+function getWordsForLevel(levelKey) {
+    if (GRADE_WORDS[levelKey]) return GRADE_WORDS[levelKey];
+    if (CHAMPION_WORDS[levelKey]) return CHAMPION_WORDS[levelKey];
+    return [];
+}
+// レベルキーの表示名（10級→「10級」、C→「チャンピオンC級」）
+function getLevelLabel(levelKey) {
+    if (GRADE_WORDS[levelKey]) return `${levelKey}級`;
+    if (CHAMPION_WORDS[levelKey]) return `チャンピオン${levelKey}級`;
+    return String(levelKey);
+}
 
 // 簡易な文字列類似度（先頭文字一致・長さの近さ）でスコア化
 function similarityScore(a, b) {
@@ -765,7 +827,14 @@ function updatePracticeModeAvailability() {
 
 function initPracticeButtons() {
     const area = document.getElementById('practice-grade-buttons');
-    area.innerHTML = GRADES.map(g => `<button class="grade-btn" onclick="selectPracticeGrade(${g}, this)">${g}級</button>`).join('');
+    const kyuHtml = GRADES.map(g => `<button class="grade-btn" onclick="selectPracticeGrade(${JSON.stringify(g)}, this)">${g}級</button>`).join('');
+    const championHtml = CHAMPION_LEVELS.map(c => `<button class="grade-btn champion-btn" onclick="selectPracticeGrade('${c}', this)">チャンピオン${c}級</button>`).join('');
+    area.innerHTML = `
+        <div class="grade-group-label">きほん（1〜10級）</div>
+        <div class="grade-group">${kyuHtml}</div>
+        <div class="grade-group-label">チャンピオンコース（A〜C級）</div>
+        <div class="grade-group">${championHtml}</div>
+    `;
 }
 
 let lastPracticeGrade = null;
@@ -785,7 +854,7 @@ function setBottomAdVisible(visible) {
 
 function startPractice(grade) {
     setBottomAdVisible(false);
-    const words = GRADE_WORDS[grade];
+    const words = getWordsForLevel(grade);
     const all = buildQuestionsForDirection(words, practiceDirection);
     practiceQuestions = shuffleArray(all).slice(0, 10);
     practiceIndex = 0; practiceScore = 0; practiceAnswered = false;
@@ -931,7 +1000,7 @@ function showPracticeResult() {
     if (practiceScore === total) playFanfareSE();
     const dirLabel = practiceDirection === 'j2e' ? '日→英' : practiceDirection === 'e2j' ? '英→日' : '両方';
     const modeLabel = practiceMode === 'choice' ? '選択式' : '入力式';
-    saveHistory('れんしゅう', `${lastPracticeGrade}級 ${dirLabel} ${modeLabel}`, practiceScore, total);
+    saveHistory('れんしゅう', `${getLevelLabel(lastPracticeGrade)} ${dirLabel} ${modeLabel}`, practiceScore, total);
 }
 
 function backToPracticeSelect() {
@@ -984,7 +1053,14 @@ function updateTestModeAvailability() {
 
 function initTestButtons() {
     const area = document.getElementById('test-grade-buttons');
-    area.innerHTML = GRADES.map(g => `<button class="grade-btn" onclick="toggleTestGrade(${g}, this)">${g}級</button>`).join('');
+    const kyuHtml = GRADES.map(g => `<button class="grade-btn" onclick="toggleTestGrade(${JSON.stringify(g)}, this)">${g}級</button>`).join('');
+    const championHtml = CHAMPION_LEVELS.map(c => `<button class="grade-btn champion-btn" onclick="toggleTestGrade('${c}', this)">チャンピオン${c}級</button>`).join('');
+    area.innerHTML = `
+        <div class="grade-group-label">きほん（1〜10級）</div>
+        <div class="grade-group">${kyuHtml}</div>
+        <div class="grade-group-label">チャンピオンコース（A〜C級）</div>
+        <div class="grade-group">${championHtml}</div>
+    `;
 }
 
 function toggleTestGrade(grade, btn) {
@@ -1003,7 +1079,7 @@ function startTest() {
     // 選んだ級の単語を全部集めて、方向設定に応じて問題を作る
     let all = [];
     selectedTestGrades.forEach(g => {
-        all = all.concat(buildQuestionsForDirection(GRADE_WORDS[g], testDirection));
+        all = all.concat(buildQuestionsForDirection(getWordsForLevel(g), testDirection));
     });
     testQuestions = shuffleArray(all).slice(0, 10);
     testIndex = 0; testScore = 0; testAnswered = false; testResults = [];
@@ -1131,7 +1207,7 @@ function showTestResult() {
     if (testScore === total) playFanfareSE();
     const dirLabel = testDirection === 'j2e' ? '日→英' : testDirection === 'e2j' ? '英→日' : '両方';
     const modeLabel = testMode === 'choice' ? '選択式' : '入力式';
-    const gradesLabel = Array.from(selectedTestGrades).sort((a,b)=>b-a).map(g=>g+'級').join(',');
+    const gradesLabel = Array.from(selectedTestGrades).map(g => getLevelLabel(g)).join(',');
     saveHistory('テスト', `${gradesLabel} ${dirLabel} ${modeLabel}`, testScore, total);
     incrementTestCompletionCount();
 }
