@@ -1022,6 +1022,9 @@ let testQuestions=[], testIndex=0, testScore=0, testAnswered=false, testResults=
 let testDirection = 'j2e';
 let testMode = 'input';
 let testUserAnswer = '';
+let testRetryQueue = []; // まちがえた もんだいを もう一度 出すためのキュー
+let testInRetryMode = false;
+let testCurrentQ = null; // 現在表示中の問題（本編/やりなおし共通で参照）
 
 function selectTestMode(mode, btn) {
     if (mode === 'input' && testDirection === 'e2j') return; // 英→日は選択式のみ
@@ -1083,6 +1086,7 @@ function startTest() {
     });
     testQuestions = shuffleArray(all).slice(0, 10);
     testIndex = 0; testScore = 0; testAnswered = false; testResults = [];
+    testRetryQueue = []; testInRetryMode = false;
     document.getElementById('test-select-area').style.display = 'none';
     document.getElementById('test-quiz-area').style.display = 'block';
     document.getElementById('test-result-area').style.display = 'none';
@@ -1093,7 +1097,8 @@ function startTest() {
 function showTestQuestion() {
     testAnswered = false;
     testUserAnswer = '';
-    const q = testQuestions[testIndex];
+    const q = testInRetryMode ? testRetryQueue[0] : testQuestions[testIndex];
+    testCurrentQ = q;
     const dirBadge = document.getElementById('test-direction');
     if (q.direction === 'e2j') {
         dirBadge.textContent = '英語 → 日本語';
@@ -1107,8 +1112,13 @@ function showTestQuestion() {
     document.getElementById('test-check-btn').style.display = 'inline-block';
     document.getElementById('test-next-btn').style.display = 'none';
     const total = testQuestions.length;
-    document.getElementById('test-progress-text').textContent = `もんだい ${testIndex+1} / ${total}`;
-    document.getElementById('test-progress-fill').style.width = `${(testIndex/total)*100}%`;
+    if (testInRetryMode) {
+        document.getElementById('test-progress-text').textContent = `やりなおし もんだい（あと ${testRetryQueue.length}もん）`;
+        document.getElementById('test-progress-fill').style.width = '100%';
+    } else {
+        document.getElementById('test-progress-text').textContent = `もんだい ${testIndex+1} / ${total}`;
+        document.getElementById('test-progress-fill').style.width = `${(testIndex/total)*100}%`;
+    }
 
     if (testMode === 'choice') {
         document.getElementById('test-input-area').style.display = 'none';
@@ -1137,7 +1147,7 @@ function testChoiceSelect(btn, value) {
 function testCheck() {
     if (testAnswered) return;
     testAnswered = true;
-    const q = testQuestions[testIndex];
+    const q = testCurrentQ;
     const displayAnswer = q.direction === 'e2j' ? q.jp : q.en;
     let isCorrect, userAnswer;
 
@@ -1159,29 +1169,53 @@ function testCheck() {
 
     const fb = document.getElementById('test-feedback');
     if (isCorrect) {
-        testScore++;
+        if (!testInRetryMode) testScore++;
         fb.innerHTML = '⭐ せいかい！ <span class="english-answer">' + displayAnswer + '</span>';
         fb.className = 'feedback correct'; fb.style.display='';
         playCorrectSE();
+        if (testInRetryMode) testRetryQueue.shift(); // やりなおし成功→キューから外す
     } else {
         fb.innerHTML = '😢 ざんねん…<br><span style="color:#999;font-size:0.7em;">あなた: ' + (userAnswer || '（くうらん）') + '</span><br><span style="font-size:1.2em;">こたえ: <span class="english-answer">' + displayAnswer + '</span></span>';
         fb.className = 'feedback incorrect'; fb.style.display='';
         playWrongSE();
+        if (testInRetryMode) {
+            // やりなおし中の不正解 → 後ろに回してもう一度チャレンジ
+            testRetryQueue.push(testRetryQueue.shift());
+        } else {
+            // 本編の不正解 → やりなおしキューに追加
+            testRetryQueue.push(q);
+        }
     }
-    testResults.push({ q, answer: userAnswer, correct: isCorrect, displayAnswer, question: q.direction==='e2j'?q.en:q.jp });
+    if (!testInRetryMode) {
+        testResults.push({ q, answer: userAnswer, correct: isCorrect, displayAnswer, question: q.direction==='e2j'?q.en:q.jp });
+    }
     document.getElementById('test-input').disabled = true;
     document.getElementById('test-check-btn').style.display = 'none';
     document.getElementById('test-next-btn').style.display = 'inline-block';
 }
 
 function testNext() {
+    if (testInRetryMode) {
+        if (testRetryQueue.length === 0) { showTestResult(); }
+        else { showTestQuestion(); }
+        return;
+    }
     testIndex++;
-    if (testIndex >= testQuestions.length) { showTestResult(); }
-    else { showTestQuestion(); }
+    if (testIndex >= testQuestions.length) {
+        if (testRetryQueue.length > 0) {
+            testInRetryMode = true;
+            showTestQuestion();
+        } else {
+            showTestResult();
+        }
+    } else {
+        showTestQuestion();
+    }
 }
 
 function showTestResult() {
     stopBGM();
+    testInRetryMode = false;
     setBottomAdVisible(true);
     document.getElementById('test-quiz-area').style.display = 'none';
     document.getElementById('test-result-area').style.display = 'block';
