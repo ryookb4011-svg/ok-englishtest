@@ -89,6 +89,11 @@
 <body>
 <div id="letter-bg"></div>
 
+<!-- 右サイドバナー（固定） -->
+<div id="side-ad" style="position:fixed; right:10px; top:50%; transform:translateY(-50%); z-index:50; opacity:0.85;">
+    <a href="https://px.a8.net/svt/ejp?a8mat=4B8454+E7FE6Y+3RK+2TP9K1" rel="nofollow"><img border="0" width="120" height="600" alt="" src="https://www21.a8.net/svt/bgt?aid=260719096859&wid=002&eno=01&mid=s00000000488017082000&mc=1"></a><img border="0" width="1" height="1" src="https://www18.a8.net/0.gif?a8mat=4B8454+E7FE6Y+3RK+2TP9K1" alt="">
+</div>
+
 <button id="settings-btn" onclick="openSettings()" title="せってい">⚙️</button>
 
 <!-- 設定モーダル -->
@@ -433,6 +438,7 @@
         h1 { font-size: 1.6em; }
         .question-word { font-size: 2em; }
         .answer-area input { width: 90%; font-size: 1.2em; }
+        #side-ad { display: none; }
     }
 </style>
 
@@ -864,6 +870,8 @@ function setBottomAdVisible(visible) {
     if (ad) ad.style.display = visible ? 'flex' : 'none';
     const seoInfo = document.getElementById('seo-info');
     if (seoInfo) seoInfo.style.display = visible ? 'block' : 'none';
+    const sideAd = document.getElementById('side-ad');
+    if (sideAd) sideAd.style.display = visible ? 'block' : 'none';
 }
 
 function startPractice(grade) {
