@@ -1828,7 +1828,39 @@ function startThreadGame() {
     canvas.ontouchend = (e) => { e.preventDefault(); setHold(false); };
 
     if (rewardGameLoopId) clearInterval(rewardGameLoopId);
-    rewardGameLoopId = setInterval(threadTick, 1000/45);
+    startCountdown(3, drawThreadGame, () => {
+        rewardGameLoopId = setInterval(threadTick, 1000/45);
+    });
+}
+
+// ========== ごほうびゲーム共通：開始前カウントダウン ==========
+function startCountdown(seconds, drawBackgroundFn, onComplete) {
+    let count = seconds;
+    const canvas = document.getElementById('reward-game-canvas');
+    const ctx = canvas.getContext('2d');
+    function drawCount(text) {
+        drawBackgroundFn();
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 90px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+    }
+    drawCount(String(count));
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            drawCount(String(count));
+        } else {
+            clearInterval(timer);
+            drawCount('スタート！');
+            setTimeout(onComplete, 500);
+        }
+    }, 1000);
 }
 
 function spawnThreadGate(x) {
