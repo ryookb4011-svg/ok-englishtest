@@ -1337,12 +1337,19 @@ function isValidPass(pass) { return /^\d{4}$/.test(pass); }
 const DEV_ACCOUNT_NAME = 'おおくぼ';
 const DEV_ACCOUNT_PASS = '1001';
 
+const SAVED_LOGIN_KEY = 'eiwa_saved_login';
+
 function loginUser() {
     const name = document.getElementById('login-name-input').value.trim();
     const pass = document.getElementById('login-pass-input').value.trim();
     if (!name) { alert('なまえを にゅうりょくしてね！'); return; }
     if (!isValidPass(pass)) { alert('パスワードは 4けたの すうじで にゅうりょくしてね！'); return; }
+    applyLogin(name, pass);
+    // 次回も自動でログインできるように、なまえ＋パスをブラウザに保存
+    localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ name, pass }));
+}
 
+function applyLogin(name, pass) {
     // なまえ＋パスの組み合わせをIDとして使用（同じ組み合わせなら常に同じ記録に紐づく）
     currentUser = `${name}#${pass}`;
     currentUserDisplayName = name;
@@ -1350,11 +1357,25 @@ function loginUser() {
     renderLoginStatus();
 }
 
+function tryAutoLogin() {
+    const saved = localStorage.getItem(SAVED_LOGIN_KEY);
+    if (!saved) return;
+    try {
+        const { name, pass } = JSON.parse(saved);
+        if (name && isValidPass(pass)) {
+            document.getElementById('login-name-input').value = name;
+            document.getElementById('login-pass-input').value = pass;
+            applyLogin(name, pass);
+        }
+    } catch (e) { /* 壊れた保存データは無視 */ }
+}
+
 function logoutUser() {
     currentUser = null;
     currentUserDisplayName = null;
     document.getElementById('login-name-input').value = '';
     document.getElementById('login-pass-input').value = '';
+    localStorage.removeItem(SAVED_LOGIN_KEY);
     updateDevGameTabVisibility('', '');
     renderLoginStatus();
 }
@@ -1894,6 +1915,7 @@ function setupThreadControls() {
 initPracticeButtons();
 initTestButtons();
 initLetterBackground();
+tryAutoLogin();
 </script>
 </body>
 </html>
