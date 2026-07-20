@@ -141,6 +141,7 @@
         <button class="tab-btn active" onclick="switchTab('practice')">🔄 れんしゅう</button>
         <button class="tab-btn" onclick="switchTab('test')">📝 テスト</button>
         <button class="tab-btn" onclick="switchTab('history')">📊 きろく</button>
+        <button class="tab-btn" id="dev-game-tab-btn" onclick="switchTab('devgame')" style="display:none;">🎮 ゲーム</button>
     </div>
 
 
@@ -236,6 +237,17 @@
         <h2 style="color:#5a3d8a; margin-bottom:15px;">📊 きろく</h2>
         <p style="color:#666; margin-bottom:15px;"><span id="history-username-label"></span>さんの きろく（さいきん20けん）</p>
         <div class="history-box" id="history-list"></div>
+    </div>
+
+    <!-- 開発用: ゲームテストタブ（おおくぼ/1001 でログインしたときのみ表示） -->
+    <div id="tab-devgame" class="tab-content">
+        <h2 style="color:#5a3d8a; margin-bottom:15px;">🎮 ゲームテスト</h2>
+        <p style="color:#666; margin-bottom:15px;">テストしたいゲームを えらんでね（テストなしで すぐ プレイできます）</p>
+        <div class="direction-buttons">
+            <button class="dir-btn" onclick="startRewardGame('tetris')">テトリス</button>
+            <button class="dir-btn" onclick="startRewardGame('thread')">いとどおし</button>
+            <button class="dir-btn" onclick="startRewardGame('block')">ブロックくずし</button>
+        </div>
     </div>
 
     <!-- SEO向け説明セクション -->
@@ -782,8 +794,10 @@ function shuffleArray(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Ma
 function switchTab(tab){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    const tabs=['practice','test','history'];
-    document.querySelectorAll('.tab-btn')[tabs.indexOf(tab)].classList.add('active');
+    const tabs=['practice','test','history','devgame'];
+    const idx = tabs.indexOf(tab);
+    const btns = document.querySelectorAll('.tab-btn');
+    if (btns[idx]) btns[idx].classList.add('active');
     document.getElementById('tab-'+tab).classList.add('active');
     if (tab === 'history') renderHistory();
 }
@@ -1319,6 +1333,10 @@ const HISTORY_KEY_PREFIX = 'eiwa_history_';
 // 4桁の数字のみを許可
 function isValidPass(pass) { return /^\d{4}$/.test(pass); }
 
+// 開発用アカウント：このなまえ＋パスでログインしたときのみ「ゲーム」タブを表示する
+const DEV_ACCOUNT_NAME = 'おおくぼ';
+const DEV_ACCOUNT_PASS = '1001';
+
 function loginUser() {
     const name = document.getElementById('login-name-input').value.trim();
     const pass = document.getElementById('login-pass-input').value.trim();
@@ -1328,6 +1346,7 @@ function loginUser() {
     // なまえ＋パスの組み合わせをIDとして使用（同じ組み合わせなら常に同じ記録に紐づく）
     currentUser = `${name}#${pass}`;
     currentUserDisplayName = name;
+    updateDevGameTabVisibility(name, pass);
     renderLoginStatus();
 }
 
@@ -1336,7 +1355,17 @@ function logoutUser() {
     currentUserDisplayName = null;
     document.getElementById('login-name-input').value = '';
     document.getElementById('login-pass-input').value = '';
+    updateDevGameTabVisibility('', '');
     renderLoginStatus();
+}
+
+function updateDevGameTabVisibility(name, pass) {
+    const isDev = (name === DEV_ACCOUNT_NAME && pass === DEV_ACCOUNT_PASS);
+    const btn = document.getElementById('dev-game-tab-btn');
+    btn.style.display = isDev ? 'inline-block' : 'none';
+    if (!isDev && document.getElementById('tab-devgame').classList.contains('active')) {
+        switchTab('practice');
+    }
 }
 
 function renderLoginStatus() {
@@ -1425,14 +1454,17 @@ function incrementTestCompletionCount() {
 }
 
 function getNextRewardGameType() {
-    let last = localStorage.getItem(REWARD_GAME_TYPE_KEY) || 'block'; // 前回のタイプ
-    const next = last === 'tetris' ? 'block' : 'tetris';
+    const order = ['tetris', 'thread', 'block'];
+    const last = localStorage.getItem(REWARD_GAME_TYPE_KEY) || 'block';
+    const idx = order.indexOf(last);
+    const next = order[(idx + 1) % order.length];
     localStorage.setItem(REWARD_GAME_TYPE_KEY, next);
     return next;
 }
 
-function startRewardGame() {
-    const type = getNextRewardGameType();
+// forceType を渡すと、ローテーションを無視してそのゲームを起動する（開発用ゲームタブから使用）
+function startRewardGame(forceType) {
+    const type = forceType || getNextRewardGameType();
     document.getElementById('reward-game-modal').style.display = 'flex';
     if (type === 'tetris') {
         document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：テトリス';
@@ -1440,6 +1472,12 @@ function startRewardGame() {
             '← → で いどう／↓ で はやくおとす／↑ で かいてん（スマホは したの ボタン）';
         setupTetrisControls();
         startTetris();
+    } else if (type === 'thread') {
+        document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：いとどおし';
+        document.getElementById('reward-game-howto').textContent =
+            'スペースキーを おしている あいだ うきあがるよ！はなすと おちるよ。はりの あなを うまく くぐろう（スマホは ボタンを おしつづける）';
+        setupThreadControls();
+        startThreadGame();
     } else {
         document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：ブロックくずし';
         document.getElementById('reward-game-howto').textContent =
@@ -1459,9 +1497,16 @@ function skipRewardGame() { endRewardGame(); }
 // ========== ごほうびゲーム 共通 ==========
 let rewardGameLoopId = null;
 let rewardGameKeyHandler = null;
+let thExtraKeyUpHandler = null;
 function stopRewardGameLoop() {
     if (rewardGameLoopId) { clearInterval(rewardGameLoopId); rewardGameLoopId = null; }
     if (rewardGameKeyHandler) { document.removeEventListener('keydown', rewardGameKeyHandler); rewardGameKeyHandler = null; }
+    if (thExtraKeyUpHandler) { document.removeEventListener('keyup', thExtraKeyUpHandler); thExtraKeyUpHandler = null; }
+    const canvas = document.getElementById('reward-game-canvas');
+    if (canvas) {
+        canvas.onmousedown = null; canvas.onmouseup = null; canvas.onmouseleave = null;
+        canvas.ontouchstart = null; canvas.ontouchend = null; canvas.onmousemove = null; canvas.ontouchmove = null;
+    }
 }
 
 // ========== テトリス ==========
@@ -1719,6 +1764,130 @@ function setupBlockControls() {
         <button class="game-ctrl-btn" onclick="bbPaddleX = Math.max(0, bbPaddleX - 30)">◀</button>
         <button class="game-ctrl-btn" onclick="bbPaddleX = Math.min(BB_W - BB_PADDLE_W, bbPaddleX + 30)">▶</button>
     `;
+}
+
+// ========== いとどおし（糸通し） ==========
+const TH_W = 320, TH_H = 420;
+let thY, thVY, thHolding, thScore, thOver, thGates, thGateTimer, thSpeed, thGravity, thLift;
+
+function startThreadGame() {
+    thY = TH_H / 2; thVY = 0; thHolding = false;
+    thScore = 0; thOver = false;
+    thSpeed = 2.2; thGravity = 0.28; thLift = -0.55;
+    thGates = [];
+    thGateTimer = 0;
+    spawnThreadGate(TH_W + 60);
+    drawThreadGame();
+
+    const canvas = document.getElementById('reward-game-canvas');
+    const setHold = (v) => { if (!thOver) thHolding = v; };
+    const onKeyDown = (e) => { if (e.code === 'Space') { e.preventDefault(); setHold(true); } };
+    const onKeyUp = (e) => { if (e.code === 'Space') { e.preventDefault(); setHold(false); } };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    rewardGameKeyHandler = onKeyDown; // stopRewardGameLoopでkeydownだけ確実に外すため代表登録
+    thExtraKeyUpHandler = onKeyUp;
+
+    canvas.onmousedown = () => setHold(true);
+    canvas.onmouseup = () => setHold(false);
+    canvas.onmouseleave = () => setHold(false);
+    canvas.ontouchstart = (e) => { e.preventDefault(); setHold(true); };
+    canvas.ontouchend = (e) => { e.preventDefault(); setHold(false); };
+
+    if (rewardGameLoopId) clearInterval(rewardGameLoopId);
+    rewardGameLoopId = setInterval(threadTick, 1000/45);
+}
+
+function spawnThreadGate(x) {
+    const gap = 90 + Math.random() * 50; // 穴の広さ
+    const gateY = 60 + Math.random() * (TH_H - 120 - gap); // 穴の位置（高さ）
+    thGates.push({ x, gap, gateY, passed: false });
+}
+
+function threadTick() {
+    if (thOver) return;
+    thVY += thHolding ? thLift : thGravity;
+    thVY = Math.max(-6, Math.min(7, thVY));
+    thY += thVY;
+
+    // 針の穴を左に流す
+    thGates.forEach(g => g.x -= thSpeed);
+    if (thGates.length && thGates[0].x < -40) thGates.shift();
+    thGateTimer++;
+    if (thGateTimer > 110) { thGateTimer = 0; spawnThreadGate(TH_W + 40); }
+
+    // 通過判定・衝突判定
+    const threadX = 60;
+    thGates.forEach(g => {
+        if (!g.passed && g.x < threadX) {
+            g.passed = true; thScore++;
+        }
+        // 衝突: 糸のX位置付近に穴がある場合、穴の外（針本体）に当たったらアウト
+        if (Math.abs(g.x - threadX) < 14) {
+            if (thY < g.gateY || thY > g.gateY + g.gap) { thOver = true; }
+        }
+    });
+    if (thY < 0 || thY > TH_H) { thOver = true; }
+
+    drawThreadGame();
+}
+
+function drawThreadGame() {
+    const canvas = document.getElementById('reward-game-canvas');
+    const ctx = canvas.getContext('2d');
+    // 背景
+    const grad = ctx.createLinearGradient(0, 0, 0, TH_H);
+    grad.addColorStop(0, '#dff3ff'); grad.addColorStop(1, '#c9e8ff');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, TH_W, TH_H);
+
+    // 針（穴つき）を描画
+    thGates.forEach(g => {
+        ctx.fillStyle = '#9e9e9e';
+        ctx.fillRect(g.x - 6, 0, 12, g.gateY); // 上部の針
+        ctx.fillRect(g.x - 6, g.gateY + g.gap, 12, TH_H - (g.gateY + g.gap)); // 下部の針
+        // 穴の縁を強調
+        ctx.strokeStyle = '#616161'; ctx.lineWidth = 2;
+        ctx.strokeRect(g.x - 6, g.gateY - 2, 12, 4);
+        ctx.strokeRect(g.x - 6, g.gateY + g.gap - 2, 12, 4);
+    });
+
+    // 糸（プレイヤー）
+    const threadX = 60;
+    ctx.strokeStyle = '#e53935'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(threadX - 20, thY);
+    ctx.lineTo(threadX + 10, thY);
+    ctx.stroke();
+    ctx.fillStyle = '#e53935';
+    ctx.beginPath(); ctx.arc(threadX + 10, thY, 6, 0, Math.PI*2); ctx.fill();
+
+    // スコア
+    ctx.fillStyle = '#333'; ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('スコア: ' + thScore, 10, 24);
+
+    if (thOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0,0,TH_W,TH_H);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('ゲームオーバー', TH_W/2, TH_H/2 - 10);
+        ctx.font = '16px sans-serif';
+        ctx.fillText(thScore + 'ほん つうか！', TH_W/2, TH_H/2 + 20);
+        ctx.fillText('スキップして つづけよう', TH_W/2, TH_H/2 + 48);
+        ctx.textAlign = 'left';
+    }
+}
+
+function setupThreadControls() {
+    const controls = document.getElementById('reward-game-controls');
+    controls.innerHTML = `
+        <button class="game-ctrl-btn" id="thread-hold-btn" style="width:120px;">⬆️ おしつづける</button>
+    `;
+    const btn = document.getElementById('thread-hold-btn');
+    const setHold = (v) => { if (!thOver) thHolding = v; };
+    btn.addEventListener('mousedown', () => setHold(true));
+    btn.addEventListener('mouseup', () => setHold(false));
+    btn.addEventListener('mouseleave', () => setHold(false));
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); setHold(true); });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); setHold(false); });
 }
 
 // ========== 起動 ==========
