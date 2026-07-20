@@ -245,7 +245,7 @@
         <p style="color:#666; margin-bottom:15px;">テストしたいゲームを えらんでね（テストなしで すぐ プレイできます）</p>
         <div class="direction-buttons">
             <button class="dir-btn" onclick="startRewardGame('tetris')">テトリス</button>
-            <button class="dir-btn" onclick="startRewardGame('thread')">いとどおし</button>
+            <button class="dir-btn" onclick="startRewardGame('thread')">いととおし</button>
             <button class="dir-btn" onclick="startRewardGame('block')">ブロックくずし</button>
         </div>
     </div>
@@ -1494,7 +1494,7 @@ function startRewardGame(forceType) {
         setupTetrisControls();
         startTetris();
     } else if (type === 'thread') {
-        document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：いとどおし';
+        document.getElementById('reward-game-title').textContent = '🎁 ごほうびゲーム：いととおし';
         document.getElementById('reward-game-howto').textContent =
             'スペースキーを おしている あいだ うきあがるよ！はなすと おちるよ。はりの あなを うまく くぐろう（スマホは ボタンを おしつづける）';
         setupThreadControls();
@@ -1680,10 +1680,10 @@ function drawTetris() {
 function setupTetrisControls() {
     const controls = document.getElementById('reward-game-controls');
     controls.innerHTML = `
-        <button class="game-ctrl-btn" ontouchstart="tetrisMove(-1)" onclick="tetrisMove(-1)">◀</button>
-        <button class="game-ctrl-btn" ontouchstart="tetrisRotate()" onclick="tetrisRotate()">🔄</button>
-        <button class="game-ctrl-btn" ontouchstart="tetrisDrop()" onclick="tetrisDrop()">▼</button>
-        <button class="game-ctrl-btn" ontouchstart="tetrisMove(1)" onclick="tetrisMove(1)">▶</button>
+        <button class="game-ctrl-btn" onclick="tetrisMove(-1)">◀</button>
+        <button class="game-ctrl-btn" onclick="tetrisRotate()">🔄</button>
+        <button class="game-ctrl-btn" onclick="tetrisDrop()">▼</button>
+        <button class="game-ctrl-btn" onclick="tetrisMove(1)">▶</button>
     `;
 }
 
@@ -1787,9 +1787,10 @@ function setupBlockControls() {
     `;
 }
 
-// ========== いとどおし（糸通し） ==========
+// ========== いととおし（糸通し） ==========
 const TH_W = 320, TH_H = 420;
 let thY, thVY, thHolding, thScore, thOver, thGates, thGateTimer, thSpeed, thGravity, thLift;
+let thTrail; // 糸のこれまでの軌跡（波打つ見た目のため）
 
 function startThreadGame() {
     thY = TH_H / 2; thVY = 0; thHolding = false;
@@ -1797,6 +1798,9 @@ function startThreadGame() {
     thSpeed = 2.2; thGravity = 0.18; thLift = -0.4;
     thGates = [];
     thGateTimer = 0;
+    // 軌跡を糸のスタート位置(x=0)からの直線で初期化
+    thTrail = [];
+    for (let x = 0; x <= 70; x += 4) thTrail.push({ x, y: thY });
     spawnThreadGate(TH_W + 60);
     drawThreadGame();
 
@@ -1820,8 +1824,12 @@ function startThreadGame() {
 }
 
 function spawnThreadGate(x) {
-    const gap = 90 + Math.random() * 50; // 穴の広さ
-    const gateY = 60 + Math.random() * (TH_H - 120 - gap); // 穴の位置（高さ）
+    // 5本通過するごとに段階的に穴が狭くなり、難易度が上がる
+    const stage = Math.floor(thScore / 5); // 0, 1, 2, 3...
+    const minGap = Math.max(45, 90 - stage * 12);
+    const gapRange = Math.max(25, 50 - stage * 5);
+    const gap = minGap + Math.random() * gapRange;
+    const gateY = 20 + Math.random() * (TH_H - 40 - gap); // 段階が上がるほど穴の位置がより極端（端寄りも増える）
     thGates.push({ x, gap, gateY, passed: false });
 }
 
@@ -1835,16 +1843,24 @@ function threadTick() {
     thGates.forEach(g => g.x -= thSpeed);
     if (thGates.length && thGates[0].x < -40) thGates.shift();
     thGateTimer++;
-    if (thGateTimer > 110) { thGateTimer = 0; spawnThreadGate(TH_W + 40); }
+    // 5本通過ごとに段階的に速く・間隔も短くして手ごわくする
+    const stage = Math.floor(thScore / 5);
+    thSpeed = Math.min(4.5, 2.2 + stage * 0.4);
+    const spawnInterval = Math.max(70, 110 - stage * 8);
+    if (thGateTimer > spawnInterval) { thGateTimer = 0; spawnThreadGate(TH_W + 40); }
 
-    // 通過判定・衝突判定
-    const threadX = 60;
+    // 糸の軌跡を更新（先端の新しい点を追加し、左端まで押し流す）
+    thTrail.forEach(p => p.x -= thSpeed);
+    thTrail.push({ x: 70, y: thY });
+    while (thTrail.length && thTrail[0].x < -5) thTrail.shift();
+
+    // 通過判定・衝突判定：糸の「先端」だけが穴を通過できればOK（軌跡が針に触れても問題ない）
+    const threadX = 70;
     thGates.forEach(g => {
         if (!g.passed && g.x < threadX) {
             g.passed = true; thScore++;
         }
-        // 衝突: 糸のX位置付近に穴がある場合、穴の外（針本体）に当たったらアウト
-        if (Math.abs(g.x - threadX) < 14) {
+        if (Math.abs(g.x - threadX) < 8) {
             if (thY < g.gateY || thY > g.gateY + g.gap) { thOver = true; }
         }
     });
