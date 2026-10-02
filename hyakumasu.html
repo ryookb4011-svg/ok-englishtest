@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>百マス計算 無料練習 | ひゃくます けいさん（小学生向け）</title>
+    <meta name="description" content="小学生向けの無料百マス計算サイト。たし算・ひき算・かけ算・わり算の1桁の四則演算を100マスで練習できます。タイマー・自動採点つきで、計算力アップに最適です。">
+    <meta name="keywords" content="百マス計算,ひゃくます計算,たし算,ひき算,かけ算,わり算,無料,練習,小学生,子供,計算力,算数">
+    <meta property="og:title" content="百マス計算 無料練習 | ひゃくます けいさん">
+    <meta property="og:description" content="小学生向け無料百マス計算サイト。1けたの四則演算を100マスで練習できるよ。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ryookb4011-svg.github.io/ok-englishtest/hyakumasu.html">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="百マス計算 無料練習">
+    <meta name="twitter:description" content="小学生向け無料百マス計算サイト。たし算・ひき算・かけ算・わり算を100マスで練習しよう！">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ひゃくます けいさん",
+        "url": "https://ryookb4011-svg.github.io/ok-englishtest/hyakumasu.html",
+        "description": "小学生向け無料百マス計算アプリ。1けたのたし算・ひき算・かけ算・わり算を100マスで練習できます。タイマー・自動採点つき。",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "JPY"
+        },
+        "inLanguage": "ja"
+    }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #4fc3f7 0%, #7e57c2 50%, #ff8a65 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            text-align: center; color: #fff; font-size: 2.2em;
+            margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Meiryo', sans-serif;
+        }
+        .subtitle {
+            text-align: center; color: rgba(255,255,255,0.9);
+            font-size: 1.1em; margin-bottom: 25px; font-family: 'Meiryo', sans-serif;
+        }
+        .card {
+            background: rgba(255,255,255,0.92); border-radius: 20px;
+            padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        /* 設定画面 */
+        #setup-screen .op-select { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .op-btn {
+            padding: 16px 24px; border: 3px solid #ddd; border-radius: 16px;
+            font-size: 1.6em; font-family: 'Meiryo', sans-serif; cursor: pointer;
+            background: #fff; color: #555; transition: all 0.2s; min-width: 70px;
+        }
+        .op-btn.selected { border-color: #7e57c2; background: #7e57c2; color: #fff; transform: scale(1.08); }
+        .op-btn:hover { border-color: #7e57c2; }
+
+        .level-select { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .level-btn {
+            padding: 10px 18px; border: 2px solid #ddd; border-radius: 12px;
+            font-size: 1em; font-family: 'Meiryo', sans-serif; cursor: pointer;
+            background: #fff; color: #555; transition: all 0.2s;
+        }
+        .level-btn.selected { border-color: #ff8a65; background: #ff8a65; color: #fff; }
+
+        .start-btn-wrap { text-align: center; }
+        .btn-start {
+            padding: 16px 50px; border: none; border-radius: 50px;
+            font-size: 1.3em; font-family: 'Meiryo', sans-serif; font-weight: bold;
+            background: linear-gradient(135deg, #66bb6a, #43a047); color: #fff;
+            cursor: pointer; box-shadow: 0 6px 15px rgba(67,160,71,0.4);
+            transition: transform 0.15s;
+        }
+        .btn-start:hover { transform: translateY(-2px); }
+        .btn-start:disabled { background: #bbb; cursor: not-allowed; box-shadow: none; }
+
+        .best-record-box {
+            margin-top: 15px; text-align: center; color: #777; font-size: 0.9em;
+        }
+
+        /* プレイ画面 */
+        #play-screen { display: none; }
+        .play-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+        }
+        .timer-box {
+            font-size: 1.8em; font-weight: bold; color: #5a3d8a;
+            background: #f3e9ff; padding: 8px 20px; border-radius: 12px;
+        }
+        .progress-box { font-size: 1.1em; color: #555; }
+        .btn-small {
+            padding: 8px 16px; border: none; border-radius: 10px;
+            background: #ff7043; color: #fff; font-family: 'Meiryo', sans-serif;
+            cursor: pointer; font-size: 0.95em;
+        }
+
+        #masu-table-wrap { overflow-x: auto; }
+        table#masu-table {
+            border-collapse: collapse; margin: 0 auto; background: #fff;
+        }
+        table#masu-table th, table#masu-table td {
+            border: 1px solid #999; width: 48px; height: 48px;
+            text-align: center; padding: 0;
+        }
+        table#masu-table th {
+            background: #5a3d8a; color: #fff; font-size: 1.2em; font-weight: bold;
+        }
+        #corner-cell { background: #7e57c2; color: #fff; font-size: 1.4em; }
+        table#masu-table input {
+            width: 100%; height: 100%; border: none; text-align: center;
+            font-size: 1.1em; font-family: 'Meiryo', sans-serif; background: transparent;
+        }
+        table#masu-table input:focus { background: #fff9c4; outline: 2px solid #7e57c2; }
+        table#masu-table input.correct-cell { background: #c8e6c9; }
+        table#masu-table input.wrong-cell { background: #ffcdd2; }
+
+        /* 結果画面 */
+        #result-screen { display: none; text-align: center; }
+        #result-screen h2 { color: #5a3d8a; font-size: 1.8em; margin-bottom: 15px; }
+        .result-stats { font-size: 1.3em; color: #333; margin-bottom: 10px; }
+        .result-stats .big-time { font-size: 1.8em; font-weight: bold; color: #43a047; }
+        .new-record-badge {
+            display: inline-block; background: #ffd54f; color: #7a5200;
+            padding: 6px 18px; border-radius: 20px; font-weight: bold;
+            margin-bottom: 15px; animation: pulseBadge 1s ease-in-out infinite;
+        }
+        @keyframes pulseBadge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .result-btns { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn-result {
+            padding: 12px 28px; border: none; border-radius: 50px;
+            font-size: 1.05em; font-family: 'Meiryo', sans-serif; cursor: pointer;
+        }
+        .btn-retry { background: #42a5f5; color: #fff; }
+        .btn-back { background: #ddd; color: #555; }
+
+        footer { text-align: center; color: rgba(255,255,255,0.8); font-size: 0.85em; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔢 百マス計算</h1>
+    <p class="subtitle">1けたの けいさんを 100マス れんしゅうしよう！</p>
+
+    <!-- 設定画面 -->
+    <div class="card" id="setup-screen">
+        <h2 style="text-align:center; color:#5a3d8a; margin-bottom:15px; font-family:'Meiryo',sans-serif;">けいさんの しゅるいを えらぼう</h2>
+        <div class="op-select">
+            <button class="op-btn selected" data-op="add" onclick="selectOp('add')">＋</button>
+            <button class="op-btn" data-op="sub" onclick="selectOp('sub')">－</button>
+            <button class="op-btn" data-op="mul" onclick="selectOp('mul')">×</button>
+            <button class="op-btn" data-op="div" onclick="selectOp('div')">÷</button>
+        </div>
+
+        <h2 style="text-align:center; color:#5a3d8a; margin-bottom:15px; font-family:'Meiryo',sans-serif;">すうじの はんいを えらぼう</h2>
+        <div class="level-select">
+            <button class="level-btn selected" data-level="1-9" onclick="selectLevel('1-9')">1〜9</button>
+            <button class="level-btn" data-level="0-9" onclick="selectLevel('0-9')">0〜9</button>
+        </div>
+
+        <div class="start-btn-wrap">
+            <button class="btn-start" id="start-btn" onclick="startGame()">▶ スタート</button>
+        </div>
+        <div class="best-record-box" id="best-record-box"></div>
+    </div>
+
+    <!-- プレイ画面 -->
+    <div class="card" id="play-screen">
+        <div class="play-header">
+            <div class="timer-box">⏱ <span id="timer-display">0:00.0</span></div>
+            <div class="progress-box">こたえた マス: <span id="progress-count">0</span> / 100</div>
+            <button class="btn-small" onclick="cancelGame()">やめる</button>
+        </div>
+        <div id="masu-table-wrap"></div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div class="card" id="result-screen">
+        <h2>🎉 けっか</h2>
+        <div id="new-record-area"></div>
+        <p class="result-stats">かかった じかん：<span class="big-time" id="result-time">0:00.0</span></p>
+        <p class="result-stats">せいかい：<span id="result-correct">0</span> / 100 もん</p>
+        <div class="result-btns">
+            <button class="btn-result btn-retry" onclick="retrySameSetting()">🔁 もう いちど</button>
+            <button class="btn-result btn-back" onclick="backToSetup()">⬅ せっていに もどる</button>
+        </div>
+    </div>
+
+    <footer>© ひゃくます けいさん れんしゅう</footer>
+</div>
+
+<script>
+// ===== 状態管理 =====
+let currentOp = 'add';
+let currentLevel = '1-9'; // '1-9' または '0-9'
+let rowNums = [];
+let colNums = [];
+let answerMap = {}; // "r_c" -> 正解
+let startTime = null;
+let timerInterval = null;
+let elapsedSeconds = 0;
+let answeredCount = 0;
+let totalCells = 100;
+
+const BEST_KEY_PREFIX = 'hyakumasu_best_';
+
+// 秒数を「分:秒.小数」の形式にする（例: 75.3秒 → "1:15.3"）
+function formatTime(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds - m * 60;
+    const sStr = s.toFixed(1).padStart(4, '0'); // "05.3" のように0埋め
+    return m + ':' + sStr;
+}
+
+function selectOp(op) {
+    currentOp = op;
+    document.querySelectorAll('.op-btn').forEach(b => b.classList.toggle('selected', b.dataset.op === op));
+    updateBestRecordDisplay();
+}
+
+function selectLevel(level) {
+    currentLevel = level;
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.toggle('selected', b.dataset.level === level));
+    updateBestRecordDisplay();
+}
+
+function getBestKey() {
+    return BEST_KEY_PREFIX + currentOp + '_' + currentLevel;
+}
+
+function updateBestRecordDisplay() {
+    const best = localStorage.getItem(getBestKey());
+    const box = document.getElementById('best-record-box');
+    if (best) {
+        box.textContent = '🏆 さいこう記録：' + formatTime(parseFloat(best)) + '（ぜんもん せいかい）';
+    } else {
+        box.textContent = 'まだ 記録が ないよ。ぜんもん せいかいで 記録に なるよ！';
+    }
+}
+
+function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function generateNumbers() {
+    // 0-9 または 1-9 の数字をランダムに並べた10個の配列を縦横それぞれ作る
+    const base = currentLevel === '0-9' ? [0,1,2,3,4,5,6,7,8,9] : [1,2,3,4,5,6,7,8,9];
+    // 10個必要。0-9なら10個そのまま、1-9（9個）なら1つだけ重複させてランダム配置
+    let pool = base.slice();
+    if (pool.length < 10) {
+        // 1-9の9個から1つランダムに重複させて10個にする
+        const extra = pool[Math.floor(Math.random() * pool.length)];
+        pool.push(extra);
+    }
+    return shuffleArray(pool);
+}
+
+function computeAnswer(a, b, op) {
+    switch (op) {
+        case 'add': return a + b;
+        case 'sub': return a - b; // 行- 列になるよう呼び出し側で調整
+        case 'mul': return a * b;
+        case 'div': return a === 0 ? null : (b % a === 0 ? b / a : null); // 使わない方向、下で調整
+    }
+}
+
+function buildMasuTable() {
+    rowNums = generateNumbers();
+    colNums = generateNumbers();
+    answerMap = {};
+    answeredCount = 0;
+    totalCells = 100;
+
+    const wrap = document.getElementById('masu-table-wrap');
+    const table = document.createElement('table');
+    table.id = 'masu-table';
+
+    // ヘッダー行
+    const thead = document.createElement('tr');
+    const corner = document.createElement('th');
+    corner.id = 'corner-cell';
+    corner.textContent = opSymbol(currentOp);
+    thead.appendChild(corner);
+    colNums.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = c;
+        thead.appendChild(th);
+    });
+    table.appendChild(thead);
+
+    rowNums.forEach((r, ri) => {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = r;
+        tr.appendChild(th);
+        colNums.forEach((c, ci) => {
+            const td = document.createElement('td');
+            const { answer, valid } = calcCell(r, c, currentOp);
+            answerMap[ri + '_' + ci] = answer;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.maxLength = 3;
+            input.dataset.r = ri;
+            input.dataset.c = ci;
+            if (!valid) {
+                // わり算で割り切れない組み合わせは入力不要セルにする（0除算含む）
+                input.disabled = true;
+                input.value = '';
+                td.style.background = '#eee';
+            } else {
+                input.addEventListener('input', onCellInput);
+                input.addEventListener('keydown', onCellKeydown);
+            }
+            td.appendChild(input);
+            tr.appendChild(td);
+        });
+        table.appendChild(tr);
+    });
+
+    wrap.innerHTML = '';
+    wrap.appendChild(table);
+
+    // わり算で無効セルがある分、合計マス数を調整
+    totalCells = Object.keys(answerMap).filter(k => answerMap[k] !== null).length;
+    document.getElementById('progress-count').textContent = '0';
+    document.querySelector('#play-screen .progress-box').innerHTML = 'こたえた マス: <span id="progress-count">0</span> / ' + totalCells;
+}
+
+function opSymbol(op) {
+    return { add: '＋', sub: '－', mul: '×', div: '÷' }[op];
+}
+
+function calcCell(r, c, op) {
+    // 行の数字が先、列の数字が後になるよう統一（r op c）
+    if (op === 'add') return { answer: r + c, valid: true };
+    if (op === 'mul') return { answer: r * c, valid: true };
+    if (op === 'sub') {
+        if (r - c < 0) return { answer: null, valid: false }; // 答えが負になる場合は無効セル
+        return { answer: r - c, valid: true };
+    }
+    if (op === 'div') {
+        if (c === 0) return { answer: null, valid: false }; // 0でわる
+        if (r % c !== 0) return { answer: null, valid: false }; // 割り切れない
+        return { answer: r / c, valid: true };
+    }
+    return { answer: null, valid: false };
+}
+
+function onCellInput(e) {
+    const input = e.target;
+    const key = input.dataset.r + '_' + input.dataset.c;
+    const val = input.value.trim();
+    input.classList.remove('correct-cell', 'wrong-cell');
+
+    if (val === '') return;
+
+    if (parseInt(val, 10) === answerMap[key]) {
+        input.classList.add('correct-cell');
+        if (!input.dataset.counted) {
+            input.dataset.counted = '1';
+            answeredCount++;
+            document.getElementById('progress-count').textContent = answeredCount;
+        }
+        moveToNextCell(input);
+        checkAllAnswered();
+    } else {
+        input.classList.add('wrong-cell');
+        if (input.dataset.counted) {
+            input.dataset.counted = '';
+            answeredCount--;
+            document.getElementById('progress-count').textContent = answeredCount;
+        }
+    }
+}
+
+function onCellKeydown(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        moveToNextCell(e.target);
+        return;
+    }
+    const arrowDirs = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+    if (arrowDirs[e.key]) {
+        e.preventDefault();
+        moveByArrow(e.target, arrowDirs[e.key][0], arrowDirs[e.key][1]);
+    }
+}
+
+function moveByArrow(input, dr, dc) {
+    let r = parseInt(input.dataset.r, 10);
+    let c = parseInt(input.dataset.c, 10);
+    const maxR = rowNums.length - 1;
+    const maxC = colNums.length - 1;
+
+    // 無効セル（disabled）は飛び越えて、次に有効なセルを探す
+    for (let step = 0; step < Math.max(maxR, maxC) + 1; step++) {
+        r += dr;
+        c += dc;
+        if (r < 0 || r > maxR || c < 0 || c > maxC) return; // 表の外に出たら何もしない
+        const next = document.querySelector('#masu-table input[data-r="' + r + '"][data-c="' + c + '"]');
+        if (next && !next.disabled) {
+            next.focus();
+            next.select();
+            return;
+        }
+    }
+}
+
+function moveToNextCell(input) {
+    const inputs = Array.from(document.querySelectorAll('#masu-table input:not([disabled])'));
+    const idx = inputs.indexOf(input);
+    for (let i = idx + 1; i < inputs.length; i++) {
+        if (!inputs[i].classList.contains('correct-cell')) {
+            inputs[i].focus();
+            return;
+        }
+    }
+    // 見つからなければ先頭から未正解を探す
+    for (let i = 0; i < inputs.length; i++) {
+        if (!inputs[i].classList.contains('correct-cell')) {
+            inputs[i].focus();
+            return;
+        }
+    }
+}
+
+function checkAllAnswered() {
+    if (answeredCount >= totalCells) {
+        finishGame();
+    }
+}
+
+function startGame() {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('play-screen').style.display = 'block';
+
+    buildMasuTable();
+    elapsedSeconds = 0;
+    document.getElementById('timer-display').textContent = '0:00.0';
+    startTime = performance.now();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        elapsedSeconds = (performance.now() - startTime) / 1000;
+        document.getElementById('timer-display').textContent = formatTime(elapsedSeconds);
+    }, 100);
+
+    // 最初のマスにフォーカス
+    setTimeout(() => {
+        const first = document.querySelector('#masu-table input:not([disabled])');
+        if (first) first.focus();
+    }, 50);
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    const finalTime = (performance.now() - startTime) / 1000;
+
+    document.getElementById('play-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('result-time').textContent = formatTime(finalTime);
+    document.getElementById('result-correct').textContent = totalCells;
+
+    // 記録更新チェック（全問正解した場合のみ記録対象）
+    const bestKey = getBestKey();
+    const best = localStorage.getItem(bestKey);
+    const area = document.getElementById('new-record-area');
+    if (!best || finalTime < parseFloat(best)) {
+        localStorage.setItem(bestKey, String(finalTime));
+        area.innerHTML = '<div class="new-record-badge">🏆 新記録！</div>';
+    } else {
+        area.innerHTML = '';
+    }
+}
+
+function cancelGame() {
+    clearInterval(timerInterval);
+    backToSetup();
+}
+
+function retrySameSetting() {
+    startGame();
+}
+
+function backToSetup() {
+    clearInterval(timerInterval);
+    document.getElementById('play-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'block';
+    updateBestRecordDisplay();
+}
+
+// 初期表示
+updateBestRecordDisplay();
+</script>
+</body>
+</html>
